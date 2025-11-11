@@ -89,9 +89,9 @@ class HudDisplayActivity : AppCompatActivity() {
             }
         }
 
-        // 关闭HUD的方法
+        // 关闭HUD的方法 - 修复：使用正确的方法名 hideHudFloat
         fun closeHud(context: Context) {
-            AmapFloatManager.dismissFloat()
+            AmapFloatManager.hideHudFloat()
             context.toast("HUD已关闭")
         }
     }
