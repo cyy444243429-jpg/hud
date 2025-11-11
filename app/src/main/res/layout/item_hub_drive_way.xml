@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="29px"
+    android:layout_height="40px">
+    <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="29px"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:id="@+id/ivIcon"
+        android:scaleType="centerInside"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_land_66"
+        android:layout_height="40px"/>
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/tvValue"
+        android:textSize="20px"
+        android:textColor="@color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</RelativeLayout>
