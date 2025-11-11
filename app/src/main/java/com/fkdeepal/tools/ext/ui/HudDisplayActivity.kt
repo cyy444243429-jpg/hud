@@ -30,11 +30,16 @@ class HudDisplayActivity : AppCompatActivity() {
     private var isAutoStartMode = false
 
     companion object {
-        // 添加这个变量来跟踪HUD是否正在运行
-        private var isHudRunning = false
+        // 添加HUD服务状态跟踪
+        private var isHudServiceRunning = false
         
-        fun isHudRunning(): Boolean {
-            return isHudRunning
+        fun isHudServiceRunning(): Boolean {
+            return isHudServiceRunning
+        }
+        
+        // 设置HUD服务状态
+        fun setHudServiceRunning(running: Boolean) {
+            isHudServiceRunning = running
         }
 
         fun startActivity(context: Context, launchDisplayId: Int) {
@@ -98,6 +103,7 @@ class HudDisplayActivity : AppCompatActivity() {
         // 关闭HUD的方法 - 修复：使用正确的方法名 hideHudFloat
         fun closeHud(context: Context) {
             AmapFloatManager.hideHudFloat()
+            setHudServiceRunning(false) // 标记HUD服务已停止
             context.toast("HUD已关闭")
         }
     }
@@ -106,9 +112,6 @@ class HudDisplayActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hud)
         Log.d("HudDisplayActivity", "create")
-        
-        // 标记HUD正在运行
-        isHudRunning = true
 
         // 检查是否为自启动模式
         isAutoStartMode = intent.getBooleanExtra("is_auto_start", false) || 
@@ -120,6 +123,9 @@ class HudDisplayActivity : AppCompatActivity() {
             3 -> AmapFloatManager.showFloat(this, -1f, -1f)
             else -> AmapFloatManager.showFloat(this)
         }
+
+        // 标记HUD服务已启动
+        setHudServiceRunning(true)
 
         // 根据模式决定后续操作
         if (isAutoStartMode) {
@@ -160,9 +166,6 @@ class HudDisplayActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
-        
-        // 标记HUD已停止运行
-        isHudRunning = false
         
         // 确保清除自启动模式标记
         if (isAutoStartMode) {
