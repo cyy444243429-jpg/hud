@@ -29,41 +29,47 @@ class HudDisplayActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var isAutoStartMode = false
 
-    companion object{
-        fun startActivity(context: Context,launchDisplayId:Int){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O   ) {
+    companion object {
+        // 添加这个变量来跟踪HUD是否正在运行
+        private var isHudRunning = false
+        
+        fun isHudRunning(): Boolean {
+            return isHudRunning
+        }
+
+        fun startActivity(context: Context, launchDisplayId: Int) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val options = ActivityOptions.makeBasic()
                 options.setLaunchDisplayId(launchDisplayId)
                 val intent = Intent(context, HudDisplayActivity::class.java)
-                if (context is Activity){
-
-                }else{
-                    intent. addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (context is Activity) {
+                    // 保持原有逻辑
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(intent, options.toBundle());
+                context.startActivity(intent, options.toBundle())
             }
         }
 
-        fun startActivity(context: Context){
-            val launchDisplayId =   UserDataManager.getHudDisplayId()
-            if (launchDisplayId == null){
-                context.toast("请先到设置页面中设置 投屏屏幕ID ")
+        fun startActivity(context: Context) {
+            val launchDisplayId = UserDataManager.getHudDisplayId()
+            if (launchDisplayId == null) {
+                context.toast("请先到设置页面中设置投屏屏幕ID")
                 return
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O   &&   Settings.canDrawOverlays(context)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && Settings.canDrawOverlays(context)) {
                 val options = ActivityOptions.makeBasic()
                 options.setLaunchDisplayId(launchDisplayId)
                 val intent = Intent(context, HudDisplayActivity::class.java)
-                if (context is Activity){
-
-                }else{
-                    intent. addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (context is Activity) {
+                    // 保持原有逻辑
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                intent.putExtra("type",1)
-                context.startActivity(intent, options.toBundle());
+                intent.putExtra("type", 1)
+                context.startActivity(intent, options.toBundle())
             }
-
         }
 
         // 新增：支持自启动模式的启动方法
@@ -100,6 +106,9 @@ class HudDisplayActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_hud)
         Log.d("HudDisplayActivity", "create")
+        
+        // 标记HUD正在运行
+        isHudRunning = true
 
         // 检查是否为自启动模式
         isAutoStartMode = intent.getBooleanExtra("is_auto_start", false) || 
@@ -151,6 +160,9 @@ class HudDisplayActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
+        
+        // 标记HUD已停止运行
+        isHudRunning = false
         
         // 确保清除自启动模式标记
         if (isAutoStartMode) {
