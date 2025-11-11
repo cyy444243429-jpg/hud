@@ -29,7 +29,7 @@ class HomeActivity : AppCompatActivity() {
         initViews()
         setupClickListeners()
         
-        // 检查是否开启自启动并自动跳转（只在HUD没有运行时）
+        // 检查是否开启自启动并自动跳转（只在HUD服务没有运行时）
         checkAutoStart()
     }
 
@@ -77,8 +77,8 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun checkAutoStart() {
-        // 只有在自启动开启且HUD没有运行时才执行
-        if (PreferenceUtils.isAutoStartEnabled(this) && !HudDisplayActivity.isHudRunning()) {
+        // 只有在自启动开启且HUD服务没有运行时才执行
+        if (PreferenceUtils.isAutoStartEnabled(this) && !HudDisplayActivity.isHudServiceRunning()) {
             // 延迟一段时间再跳转，让界面先显示出来
             handler.postDelayed({
                 startHudDisplayActivity(true) // true表示自启动模式
