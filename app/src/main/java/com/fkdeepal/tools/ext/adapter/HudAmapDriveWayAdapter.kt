@@ -1,0 +1,60 @@
+package com.fkdeepal.tools.ext.adapter
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.content.ContextCompat
+import com.fkdeepal.tools.ext.R
+import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
+import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
+import com.fkdeepal.tools.ext.databinding.ItemHubDriveWayBinding
+import com.fkdeepal.tools.ext.utils.AppUtils
+
+class HudAmapDriveWayAdapter( mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapter<ItemHubDriveWayBinding,AmapDriveWayInfoBean>(AppUtils.appContext,
+                                                                                                                                 mData) {
+    private val mResources by lazy {
+       mContext. getResources()
+    }
+    private val mPackageName  by lazy {
+        mContext.getPackageName()
+    }
+    override fun onCreateViewBinding(layoutInflater: LayoutInflater,
+                                     parent: ViewGroup,
+                                     viewType: Int): ItemHubDriveWayBinding {
+        return ItemHubDriveWayBinding.inflate(layoutInflater, parent, false)
+    }
+
+    fun setImageDrawable(viewBinding: ItemHubDriveWayBinding,resourceName:String,
+                         fail:()-> Unit){
+
+        runCatching {
+            val resourceId = mResources.getIdentifier(resourceName, "drawable", mPackageName);
+            var drawable = ContextCompat.getDrawable(mContext,resourceId)
+            if (drawable!=null){
+                viewBinding.ivIcon.setImageDrawable(drawable)
+            }else{
+                viewBinding.ivIcon.setImageDrawable(null)
+            }
+        }.onFailure {
+            viewBinding.ivIcon.setImageDrawable(null)
+            fail.invoke()
+        }
+    }
+    override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
+                                   item: AmapDriveWayInfoBean,
+                                   position: Int) {
+        val icon = item.drive_way_lane_Back_icon
+        viewBinding.tvValue.visibility = View.GONE
+        if (icon.isNullOrBlank()){
+            viewBinding.ivIcon.setImageResource(R.drawable.ic_land_89)
+        }else{
+            val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
+            setImageDrawable(viewBinding,resourceName,
+                             {
+                                 viewBinding.tvValue.visibility = View.VISIBLE
+                                 viewBinding.tvValue.setText(icon)
+                             })
+        }
+
+    }
+}
