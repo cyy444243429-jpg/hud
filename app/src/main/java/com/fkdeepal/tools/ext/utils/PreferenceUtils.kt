@@ -179,4 +179,30 @@ object PreferenceUtils {
             editor.commit()
         }
     }
+
+    // 自启动相关常量
+    private const val KEY_AUTO_START = "auto_start"
+    private const val KEY_IS_AUTO_START_MODE = "is_auto_start_mode"
+
+    // 自启动开关状态
+    @JvmStatic
+    fun setAutoStartEnabled(context: Context, enabled: Boolean) {
+        putBoolean(context, KEY_AUTO_START, enabled)
+    }
+
+    @JvmStatic
+    fun isAutoStartEnabled(context: Context): Boolean {
+        return getBoolean(context, KEY_AUTO_START, false)
+    }
+
+    // 标记当前是否为自启动模式
+    @JvmStatic
+    fun setAutoStartMode(context: Context, isAutoMode: Boolean) {
+        putBoolean(context, KEY_IS_AUTO_START_MODE, isAutoMode)
+    }
+
+    @JvmStatic
+    fun isAutoStartMode(context: Context): Boolean {
+        return getBoolean(context, KEY_IS_AUTO_START_MODE, false)
+    }
 }
