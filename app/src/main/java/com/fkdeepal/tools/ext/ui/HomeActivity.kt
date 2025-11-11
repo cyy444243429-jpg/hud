@@ -11,6 +11,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
+import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
+import com.fkdeepal.tools.ext.ui.setting.SettingActivity
+import com.fkdeepal.tools.ext.ui.test.TestActivity
+import com.fkdeepal.tools.ext.ui.log.LogFileListActivity
 
 class HomeActivity : AppCompatActivity() {
 
