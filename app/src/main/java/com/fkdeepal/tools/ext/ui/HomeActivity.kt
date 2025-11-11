@@ -1,66 +1,105 @@
 package com.fkdeepal.tools.ext.ui
 
-import android.app.ActivityOptions
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
-import android.view.LayoutInflater
-import android.view.View
-import com.fkdeepal.tools.ext.AmapFloatManager
-import com.fkdeepal.tools.ext.BuildConfig
+import android.widget.Button
+import android.widget.Switch
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.fkdeepal.tools.ext.R
-import com.fkdeepal.tools.ext.base.BaseActivity
-import com.fkdeepal.tools.ext.databinding.ActivityMainBinding
-import com.fkdeepal.tools.ext.presentation.HudPresentation
-import com.fkdeepal.tools.ext.ui.log.LogFileListActivity
-import com.fkdeepal.tools.ext.ui.setting.SettingActivity
-import com.fkdeepal.tools.ext.ui.test.TestActivity
-import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
-import com.fkdeepal.tools.ext.utils.AppUtils
-import java.text.SimpleDateFormat
-import java.util.Locale
+import com.fkdeepal.tools.ext.utils.PreferenceUtils
 
-class HomeActivity: BaseActivity<ActivityMainBinding>() {
-    override fun initViews() {
-        if (!isTaskRoot) {
-            val intent: Intent? = intent // 如果当前 Activity 是通过桌面图标启动进入的
-            if (((intent != null) && (intent.hasCategory(Intent.CATEGORY_LAUNCHER) || (Intent.ACTION_MAIN == intent.action)) )) { // 对当前 Activity 执行销毁操作，避免重复实例化入口
-                finish()
-                return
-            }
+class HomeActivity : AppCompatActivity() {
+
+    private lateinit var switchAutoStart: Switch
+    private lateinit var btnNaviHud: Button
+    private val handler = Handler(Looper.getMainLooper())
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        initViews()
+        setupClickListeners()
+        
+        // 检查是否开启自启动并自动跳转
+        checkAutoStart()
+    }
+
+    private fun initViews() {
+        switchAutoStart = findViewById(R.id.switchAutoStart)
+        btnNaviHud = findViewById(R.id.btnNaviHud)
+        
+        // 设置开关状态
+        switchAutoStart.isChecked = PreferenceUtils.isAutoStartEnabled(this)
+    }
+
+    private fun setupClickListeners() {
+        // 自启动开关监听
+        switchAutoStart.setOnCheckedChangeListener { _, isChecked ->
+            PreferenceUtils.setAutoStartEnabled(this, isChecked)
         }
-        mViewBinding.apply {
-            setOnClickListener(btnTest,btnNaviHud,btnLog,btnNaviHudClose,btnVideo,btnSetting)
-            val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.US)
-            val buildDate: String = dateFormat.format(BuildConfig.BUILD_TIME_MILLIS)
-            tvBuildTime.setText(buildDate)
-            if (AppUtils.isDebug){
-                layoutDev.visibility = View.VISIBLE
-            }
+
+        // 启动导航HUD按钮 - 手动模式
+        btnNaviHud.setOnClickListener {
+            startHudDisplayActivity(false) // false表示手动启动
+        }
+
+        // 其他按钮监听保持原有逻辑...
+        findViewById<Button>(R.id.btnNaviHudClose).setOnClickListener {
+            // 关闭导航HUD的逻辑
+            HudDisplayActivity.closeHud(this)
+        }
+
+        findViewById<Button>(R.id.btnVideo).setOnClickListener {
+            startActivity(Intent(this, HudVideoActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnSetting).setOnClickListener {
+            startActivity(Intent(this, SettingActivity::class.java))
+        }
+        
+        // 开发模式按钮
+        findViewById<Button>(R.id.btnTest)?.setOnClickListener {
+            startActivity(Intent(this, TestActivity::class.java))
+        }
+        
+        findViewById<Button>(R.id.btnLog)?.setOnClickListener {
+            startActivity(Intent(this, LogFileListActivity::class.java))
         }
     }
 
-    override fun isDisplayHomeAsUpEnabled(): Boolean  = false
-    override fun initViewBinding(layoutInflater: LayoutInflater): ActivityMainBinding?  = ActivityMainBinding.inflate(layoutInflater)
-    override fun onViewClick(v: View) {
-        mViewBinding.apply {
-            when(v){
-                btnTest-> TestActivity.startActivity(mActivity)
-                btnNaviHudClose-> AmapFloatManager.hideHudFloat()
-                btnVideo-> HudVideoActivity.startActivity(mActivity)
-                btnLog-> LogFileListActivity.startActivity(mActivity)
-                btnSetting-> SettingActivity.startActivity(mActivity)
-                btnNaviHud->{
-                    if (!Settings.canDrawOverlays(mActivity)) {
-                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                        startActivityForResult(intent, 1)
-                        return
-                    }
-                    HudDisplayActivity.startActivity(mActivity)
-                }
-            }
+    private fun checkAutoStart() {
+        if (PreferenceUtils.isAutoStartEnabled(this)) {
+            // 延迟一段时间再跳转，让界面先显示出来
+            handler.postDelayed({
+                startHudDisplayActivity(true) // true表示自启动模式
+            }, 800)
         }
+    }
+
+    private fun startHudDisplayActivity(isAutoStart: Boolean) {
+        if (Settings.canDrawOverlays(this)) {
+            // 标记启动模式
+            PreferenceUtils.setAutoStartMode(this, isAutoStart)
+            
+            // 使用新的启动方法，传递自启动模式
+            HudDisplayActivity.startActivity(this, isAutoStart)
+            
+            if (isAutoStart) {
+                // 如果是自启动模式，立即finish当前页面
+                finish()
+            }
+        } else {
+            Toast.makeText(this, "请先授予悬浮窗权限", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
     }
 }
