@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:allowBackup="true"
+        android:name=".app.AppApplication"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.App" >
+        <activity
+            android:name=".ui.HomeActivity"
+            android:alwaysRetainTaskState="true"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".ui.test.TestActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:label="测试页面"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
+            />
+        <activity android:name=".ui.HudDisplayActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"
+            android:label="测试页面"
+            android:theme="@style/Theme.App.NoActionBar"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
+            />
+     <!--  <receiver
+            android:name=".receiver.BootReceiver"
+           android:enabled="true"
+           android:exported="true">
+           <intent-filter>
+               <action
+                   android:name="android.intent.action.BOOT_COMPLETED" />
+               <action
+                   android:name="android.intent.action.QUICKBOOT_POWERON" />
+               <category
+                   android:name="android.intent.category.LAUNCHER" />
+
+           </intent-filter>
+        </receiver>-->
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+        <activity
+            android:name=".ui.log.LogFileListActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="Log"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+        <activity
+            android:name=".ui.log.LogDetailActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="Log"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+        <activity
+            android:name=".ui.video.HudVideoActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="视频投屏播放"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+        <activity
+            android:name=".ui.setting.SettingActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="设置"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+    </application>
+</manifest>
