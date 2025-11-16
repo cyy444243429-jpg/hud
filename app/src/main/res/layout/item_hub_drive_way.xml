@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="29px"
     android:layout_height="40px">
-    <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="29px"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:orientation="vertical"
-        android:gravity="center"
+
+    <!-- 修改：使用AppCompatImageView以支持矢量图 -->
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ivIcon"
+        android:layout_width="29px"
+        android:layout_height="40px"
         android:scaleType="centerInside"
         android:adjustViewBounds="true"
-        android:src="@drawable/ic_land_66"
-        android:layout_height="40px"/>
+        app:srcCompat="@drawable/ic_land_66" />
 
     <TextView
-        android:visibility="gone"
         android:id="@+id/tvValue"
-        android:textSize="20px"
-        android:textColor="@color/white"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:textSize="20px"
+        android:visibility="gone" />
+
 </RelativeLayout>
