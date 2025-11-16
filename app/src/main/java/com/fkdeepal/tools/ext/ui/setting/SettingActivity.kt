@@ -44,6 +44,12 @@ class SettingActivity: AppCompatActivity() {
         }
         return super.onOptionsItemSelected(item)
     }
+    
+    // 在适当的位置添加，比如在设置项点击事件中
+    fun onLandColorSettingClicked() {
+        startActivity(Intent(this, LandColorSettingActivity::class.java))
+    }
+    
     class SettingFragment : PreferenceFragmentCompat() {
         private val mDisplayManager by lazy { ContextCompat.getSystemService<DisplayManager>(requireContext(), DisplayManager::class.java) }
 
