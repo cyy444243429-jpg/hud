@@ -3,6 +3,7 @@ package com.fkdeepal.tools.ext.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
@@ -33,11 +34,16 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                          fail: () -> Unit) {
 
         runCatching {
-            // 修改：查找xml资源而不是png
+            // 修改：查找xml资源而不是png，使用AppCompatResources以支持矢量图
             val resourceId = mResources.getIdentifier(resourceName, "drawable", mPackageName)
-            val drawable = ContextCompat.getDrawable(mContext, resourceId)
-            if (drawable != null) {
-                viewBinding.ivIcon.setImageDrawable(drawable)
+            if (resourceId != 0) {
+                val drawable = AppCompatResources.getDrawable(mContext, resourceId)
+                if (drawable != null) {
+                    viewBinding.ivIcon.setImageDrawable(drawable)
+                } else {
+                    viewBinding.ivIcon.setImageDrawable(null)
+                    fail.invoke()
+                }
             } else {
                 viewBinding.ivIcon.setImageDrawable(null)
                 fail.invoke()
