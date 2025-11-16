@@ -21,6 +21,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("long", "BUILD_TIME_MILLIS", "${System.currentTimeMillis()}L")
+        
+        // 添加矢量图形支持库配置
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
@@ -97,6 +100,10 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.preference)
     implementation(libs.preference.ktx)
+    
+    // 添加矢量图形支持库依赖
+    implementation("androidx.vectordrawable:vectordrawable:1.1.0")
+    
     testImplementation(libs.junit)
     testImplementation(fileTree(mapOf("dir" to "testLibs", "include" to listOf("*.jar"))))
     androidTestImplementation(libs.androidx.junit)
