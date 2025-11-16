@@ -48,6 +48,10 @@
             android:theme="@style/Theme.App.NoActionBar"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             />
+        <activity
+            android:name=".LandColorSettingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
      <!--  <receiver
             android:name=".receiver.BootReceiver"
            android:enabled="true"
