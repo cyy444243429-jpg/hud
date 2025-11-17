@@ -15,6 +15,9 @@ android {
         versionName = "1.0"
         
         vectorDrawables.useSupportLibrary = true
+        
+        // 添加这行解决命名空间问题
+        namespace = "com.fkdeepal.tools.ext"
     }
     
     buildTypes {
