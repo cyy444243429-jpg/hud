@@ -72,12 +72,25 @@ class AppApplication : Application(){
     private fun saveCrashLog(thread: Thread, throwable: Throwable, stackTrace: String, usedMemory: Long, maxMemory: Long) {
         try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val crashFile = FileUtils.getLogCacheFile(AppUtils.appContext, "crash_${timeStamp}.txt")
+            
+            // 创建独立的崩溃日志文件
+            val crashFileName = "crash_${timeStamp}.txt"
+            val crashFile = java.io.File(AppUtils.appContext.filesDir, crashFileName)
+            
+            // 获取版本信息
+            val packageInfo = AppUtils.appContext.packageManager.getPackageInfo(AppUtils.appContext.packageName, 0)
+            val versionName = packageInfo.versionName
+            val versionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode.toString()
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toString()
+            }
             
             val crashInfo = """
             |=== 应用程序崩溃报告 ===
             |崩溃时间: ${Date()}
-            |应用版本: ${AppUtils.getVersionName()} (${AppUtils.getVersionCode()})
+            |应用版本: $versionName ($versionCode)
             |设备信息: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}
             |Android版本: ${android.os.Build.VERSION.RELEASE} (SDK: ${android.os.Build.VERSION.SDK_INT})
             |
@@ -93,9 +106,6 @@ class AppApplication : Application(){
             |
             |=== 堆栈跟踪 ===
             |$stackTrace
-            |
-            |=== 线程状态 ===
-            |${getAllThreadsInfo()}
             """.trimMargin()
             
             crashFile.writeText(crashInfo)
@@ -103,26 +113,6 @@ class AppApplication : Application(){
             
         } catch (e: Exception) {
             Timber.e(e, "保存崩溃日志失败")
-        }
-    }
-    
-    private fun getAllThreadsInfo(): String {
-        return try {
-            val threadSet = Thread.getAllStackTraces()
-            val sb = StringBuilder()
-            threadSet.forEach { (thread, stackTrace) ->
-                sb.append("线程: ${thread.name} (ID: ${thread.id}, 状态: ${thread.state})\n")
-                if (stackTrace.isNotEmpty()) {
-                    sb.append("  堆栈:\n")
-                    stackTrace.take(5).forEach { element ->
-                        sb.append("    $element\n")
-                    }
-                }
-                sb.append("\n")
-            }
-            sb.toString()
-        } catch (e: Exception) {
-            "获取线程信息失败: ${e.message}"
         }
     }
 }
