@@ -24,10 +24,9 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 class SettingActivity: AppCompatActivity() {
-    
-    companion object {
+    companion object{
         private const val TAG = "SettingActivity"
-        
+
         fun startActivity(activity: Activity) {
             Timber.tag(TAG).d("启动设置Activity")
             val intent = Intent(activity, SettingActivity::class.java)
@@ -73,6 +72,10 @@ class SettingActivity: AppCompatActivity() {
             ContextCompat.getSystemService<DisplayManager>(requireContext(), DisplayManager::class.java) 
         }
         
+        // 修复：将点击计数变量移到类级别
+        private var mClickTime: Int = 0
+        private var mFirstClickTime: Long = 0
+        
         companion object {
             private const val TAG = "SettingFragment"
         }
@@ -112,14 +115,16 @@ class SettingActivity: AppCompatActivity() {
                 Timber.tag(TAG).d("初始化构建时间")
                 val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.US)
                 val buildDate: String = dateFormat.format(BuildConfig.BUILD_TIME_MILLIS)
+                
+                // 修复：使用类级别的变量
                 it.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
-                    var mClickTime: Int = 0
-                    var mFirstClickTime: Long = 0
-
+                    Timber.tag(TAG).d("点击构建时间，当前点击次数: $mClickTime")
+                    
                     if (mClickTime == 0) {
                         mFirstClickTime = System.currentTimeMillis()
                     }
                     ++mClickTime
+                    
                     if (mClickTime == 10) {
                         if (System.currentTimeMillis() - mFirstClickTime < 4 * 1000) {
                             Timber.tag(TAG).i("快速点击10次，显示调试选项")
@@ -128,6 +133,7 @@ class SettingActivity: AppCompatActivity() {
                         mClickTime = 0
                     } else {
                         if (System.currentTimeMillis() - mFirstClickTime > 4 * 1000) {
+                            Timber.tag(TAG).d("点击超时，重置计数")
                             mClickTime = 0
                         }
                     }
@@ -136,7 +142,7 @@ class SettingActivity: AppCompatActivity() {
                 it.summary = buildDate
             }
             
-            // 新增：颜色设置点击事件
+            // 颜色设置点击事件
             findPreference<Preference>("key_land_color_setting")?.let {
                 Timber.tag(TAG).d("初始化颜色设置选项")
                 it.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
