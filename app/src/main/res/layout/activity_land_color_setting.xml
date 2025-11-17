@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -74,10 +75,11 @@
             android:layout_height="wrap_content"
             android:max="255" />
 
+        <!-- 使用 gray 颜色作为分隔线 -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#CCCCCC"
+            android:background="@color/gray"
             android:layout_marginVertical="24dp" />
 
         <!-- 次颜色设置（红色箭头） -->
@@ -152,7 +154,7 @@
             android:orientation="horizontal"
             android:layout_marginTop="24dp">
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnSave"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -160,7 +162,7 @@
                 android:text="保存"
                 android:layout_marginEnd="8dp" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnReset"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -168,7 +170,7 @@
                 android:text="重置"
                 android:layout_marginEnd="8dp" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnCancel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
