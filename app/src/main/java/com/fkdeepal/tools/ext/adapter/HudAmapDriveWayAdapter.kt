@@ -109,7 +109,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                     viewBinding.ivIcon.setImageDrawable(null)
                 }
             } else {
-                // 恢复完整的 ic_land_xx 图标加载
+                // 完整的 ic_land_xx 图标加载
                 val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
                 Timber.tag(TAG).d("加载ic_land_xx图标: $resourceName - 位置: $position")
                 setImageDrawable(viewBinding, resourceName) {
