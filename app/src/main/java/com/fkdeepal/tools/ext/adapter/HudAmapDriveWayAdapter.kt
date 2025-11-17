@@ -33,6 +33,9 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun onCreateViewBinding(layoutInflater: LayoutInflater,
                                      parent: ViewGroup,
                                      viewType: Int): ItemHubDriveWayBinding {
+        (AppUtils.appContext.applicationContext as? com.fkdeepal.tools.ext.app.AppApplication)?.logOperation(
+            "HudAmapDriveWayAdapter.onCreateViewBinding()"
+        )
         Timber.tag(TAG).d("创建视图绑定")
         return ItemHubDriveWayBinding.inflate(layoutInflater, parent, false)
     }
@@ -88,6 +91,11 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
                                    position: Int) {
+        // 记录操作
+        (AppUtils.appContext.applicationContext as? com.fkdeepal.tools.ext.app.AppApplication)?.logOperation(
+            "HudAmapDriveWayAdapter.setViewHolderData() - pos: $position, icon: ${item.drive_way_lane_Back_icon}"
+        )
+        
         // 添加内存监控
         logMemoryStatus("开始设置车道数据 - 位置: $position")
         
