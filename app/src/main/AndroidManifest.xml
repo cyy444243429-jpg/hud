@@ -51,6 +51,7 @@
         <activity
             android:name=".LandColorSettingActivity"
             android:exported="false"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar" />
      <!--  <receiver
             android:name=".receiver.BootReceiver"
