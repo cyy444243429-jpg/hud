@@ -5,11 +5,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.fkdeepal.tools.ext.R
+import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
 import com.fkdeepal.tools.ext.ui.setting.SettingActivity
@@ -39,6 +42,11 @@ class HomeActivity : AppCompatActivity() {
         
         // 设置开关状态
         switchAutoStart.isChecked = PreferenceUtils.isAutoStartEnabled(this)
+        
+        // 显示开发模式按钮（包括Log按钮）
+        if (AppUtils.isDebug) {
+            findViewById<LinearLayout>(R.id.layoutDev)?.visibility = View.VISIBLE
+        }
     }
 
     private fun setupClickListeners() {
