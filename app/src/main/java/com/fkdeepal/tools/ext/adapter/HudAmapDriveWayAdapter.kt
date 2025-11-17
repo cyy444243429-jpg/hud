@@ -67,4 +67,3 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
 
     }
 }
-}
