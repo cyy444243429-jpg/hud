@@ -1,7 +1,6 @@
 package com.fkdeepal.tools.ext.ui
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -12,7 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
-import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
+import com.fkdeepal.tools.ext.LandColorSettingActivity // 添加这行导入
 import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
 import com.fkdeepal.tools.ext.ui.setting.SettingActivity
 import com.fkdeepal.tools.ext.ui.test.TestActivity
@@ -110,14 +109,14 @@ class HomeActivity : AppCompatActivity() {
             startActivity(Intent(this, LogFileListActivity::class.java))
         }
         
-        // 颜色设置按钮
+        // 颜色设置按钮 - 修复第116行的引用
         findViewById<Button>(R.id.btnColorSettings)?.setOnClickListener {
             Timber.tag(TAG).i("点击颜色设置按钮")
             startActivity(Intent(this, LandColorSettingActivity::class.java))
         }
         
-        // 颜色管理器测试按钮
-        findViewById<Button>(R.id.btnTestColorManager)?.setOnClickListener {
+        // 颜色管理器测试按钮 - 暂时注释掉，先确保基本构建成功
+        /*findViewById<Button>(R.id.btnTestColorManager)?.setOnClickListener {
             Timber.tag(TAG).i("测试颜色管理器日志")
             val colorManager = ColorPreferenceManager.getInstance(this)
             colorManager.getLandPrimaryColor()
@@ -125,7 +124,7 @@ class HomeActivity : AppCompatActivity() {
             colorManager.setLandPrimaryColor(Color.BLUE)
             colorManager.setLandSecondaryColor(Color.GREEN)
             colorManager.resetToDefault()
-        }
+        }*/
     }
 
     private fun checkAutoStart() {
