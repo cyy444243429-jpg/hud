@@ -10,6 +10,12 @@
             app:defaultValue="">
         </ListPreference>
     </PreferenceCategory>
+    <PreferenceCategory android:title="颜色设置" >
+        <Preference
+            android:key="key_land_color_setting"
+            android:title="车道图标颜色设置"
+            android:summary="设置主颜色（灰色箭头）和次颜色（红色箭头）的RGB值" />
+    </PreferenceCategory>
     <PreferenceCategory android:title="其他" >
         <!--单选-->
         <SwitchPreferenceCompat
