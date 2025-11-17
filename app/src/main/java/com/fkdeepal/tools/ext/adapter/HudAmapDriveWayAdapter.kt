@@ -31,7 +31,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun onCreateViewBinding(layoutInflater: LayoutInflater,
                                      parent: ViewGroup,
                                      viewType: Int): ItemHubDriveWayBinding {
-        Timber.tag(TAG).d("创建视图绑定")
         return ItemHubDriveWayBinding.inflate(layoutInflater, parent, false)
     }
 
@@ -76,9 +75,9 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
                                    position: Int) {
-        Timber.tag(TAG).d("设置视图持有者数据 - 位置: $position, 图标: ${item.drive_way_lane_Back_icon}")
         val icon = item.drive_way_lane_Back_icon
         viewBinding.tvValue.visibility = View.GONE
+        
         if (icon.isNullOrBlank()) {
             // 使用安全的默认资源加载
             runCatching {
@@ -90,12 +89,24 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 viewBinding.ivIcon.setImageDrawable(null)
             }
         } else {
+            // ========== 临时注释掉 ic_land_xx 图标加载 ==========
+            Timber.tag(TAG).d("跳过ic_land_xx图标加载 - 位置: $position, 图标: $icon (测试模式)")
+            
+            // 直接显示文本，不加载ic_land_xx图标
+            viewBinding.tvValue.visibility = View.VISIBLE
+            viewBinding.tvValue.text = icon
+            viewBinding.ivIcon.visibility = View.GONE
+            
+            /*
+            // ========== 原有的 ic_land_xx 图标加载代码 ==========
             val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
             setImageDrawable(viewBinding, resourceName) {
                 Timber.tag(TAG).d("图标加载失败，显示文本: $icon")
                 viewBinding.tvValue.visibility = View.VISIBLE
                 viewBinding.tvValue.text = icon
             }
+            */
+            // ========== 注释结束 ==========
         }
     }
 }
