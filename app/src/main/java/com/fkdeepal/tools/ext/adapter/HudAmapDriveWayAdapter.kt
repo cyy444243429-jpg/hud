@@ -12,6 +12,8 @@ import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.ItemHubDriveWayBinding
 import com.fkdeepal.tools.ext.utils.AppUtils
 import timber.log.Timber
+import java.io.PrintWriter
+import java.io.StringWriter
 
 class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapter<ItemHubDriveWayBinding, AmapDriveWayInfoBean>(
     AppUtils.appContext,
@@ -37,19 +39,29 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
 
     fun setImageDrawable(viewBinding: ItemHubDriveWayBinding, resourceName: String,
                          fail: () -> Unit) {
+        
+        // 添加内存监控
+        logMemoryStatus("开始加载图标: $resourceName")
 
         runCatching {
             // 使用更安全的矢量图加载方式
             val resourceId = mResources.getIdentifier(resourceName, "drawable", mPackageName)
+            Timber.tag(TAG).d("资源ID查询: $resourceName -> $resourceId")
+            
             if (resourceId != 0) {
                 // 使用 AppCompatResources 加载矢量图
                 val drawable = AppCompatResources.getDrawable(mContext, resourceId)
                 if (drawable != null) {
                     // 在主线程安全设置图片
                     viewBinding.root.post {
-                        viewBinding.ivIcon.setImageDrawable(drawable)
+                        runCatching {
+                            viewBinding.ivIcon.setImageDrawable(drawable)
+                            Timber.tag(TAG).d("成功加载矢量图: $resourceName")
+                            logMemoryStatus("图标加载完成: $resourceName")
+                        }.onFailure { e ->
+                            Timber.tag(TAG).e(e, "设置图片时发生错误: $resourceName")
+                        }
                     }
-                    Timber.tag(TAG).d("成功加载矢量图: $resourceName")
                 } else {
                     Timber.tag(TAG).w("矢量图加载为null: $resourceName")
                     viewBinding.root.post {
@@ -76,26 +88,57 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
                                    position: Int) {
-        Timber.tag(TAG).d("设置视图持有者数据 - 位置: $position, 图标: ${item.drive_way_lane_Back_icon}")
-        val icon = item.drive_way_lane_Back_icon
-        viewBinding.tvValue.visibility = View.GONE
-        if (icon.isNullOrBlank()) {
-            // 使用安全的默认资源加载
-            runCatching {
-                val drawable = AppCompatResources.getDrawable(mContext, R.drawable.ic_land_89)
-                viewBinding.ivIcon.setImageDrawable(drawable)
-                Timber.tag(TAG).d("使用默认图标")
-            }.onFailure {
-                Timber.tag(TAG).e(it, "加载默认图标失败")
-                viewBinding.ivIcon.setImageDrawable(null)
+        // 添加内存监控
+        logMemoryStatus("开始设置车道数据 - 位置: $position")
+        
+        runCatching {
+            val icon = item.drive_way_lane_Back_icon
+            Timber.tag(TAG).d("设置车道数据 - 位置: $position, 图标: $icon")
+            
+            viewBinding.tvValue.visibility = View.GONE
+            
+            if (icon.isNullOrBlank()) {
+                // 使用安全的默认资源加载
+                runCatching {
+                    val drawable = AppCompatResources.getDrawable(mContext, R.drawable.ic_land_89)
+                    viewBinding.ivIcon.setImageDrawable(drawable)
+                    Timber.tag(TAG).d("使用默认图标 - 位置: $position")
+                    logMemoryStatus("默认图标设置完成 - 位置: $position")
+                }.onFailure {
+                    Timber.tag(TAG).e(it, "加载默认图标失败 - 位置: $position")
+                    viewBinding.ivIcon.setImageDrawable(null)
+                }
+            } else {
+                // 恢复完整的 ic_land_xx 图标加载
+                val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
+                Timber.tag(TAG).d("加载ic_land_xx图标: $resourceName - 位置: $position")
+                setImageDrawable(viewBinding, resourceName) {
+                    Timber.tag(TAG).d("图标加载失败，显示文本: $icon")
+                    viewBinding.tvValue.visibility = View.VISIBLE
+                    viewBinding.tvValue.text = icon
+                }
             }
-        } else {
-            val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
-            setImageDrawable(viewBinding, resourceName) {
-                Timber.tag(TAG).d("图标加载失败，显示文本: $icon")
-                viewBinding.tvValue.visibility = View.VISIBLE
-                viewBinding.tvValue.text = icon
-            }
+            
+            logMemoryStatus("车道数据设置完成 - 位置: $position")
+            
+        }.onFailure { exception ->
+            Timber.tag(TAG).e(exception, "设置车道数据时发生异常 - 位置: $position")
+            // 记录详细的异常信息
+            val sw = StringWriter()
+            val pw = PrintWriter(sw)
+            exception.printStackTrace(pw)
+            Timber.tag(TAG).e("异常堆栈:\n${sw.toString()}")
+        }
+    }
+    
+    private fun logMemoryStatus(operation: String) {
+        try {
+            val runtime = Runtime.getRuntime()
+            val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
+            val maxMemory = runtime.maxMemory() / (1024 * 1024)
+            Timber.tag(TAG).d("$operation - 内存: ${usedMemory}MB/${maxMemory}MB")
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "获取内存状态失败")
         }
     }
 }
