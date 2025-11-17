@@ -15,6 +15,7 @@ import androidx.preference.PreferenceScreen
 import androidx.preference.SwitchPreferenceCompat
 import com.fkdeepal.tools.ext.BuildConfig
 import com.fkdeepal.tools.ext.R
+import com.fkdeepal.tools.ext.LandColorSettingActivity
 import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
 import com.fkdeepal.tools.ext.ui.video.VideoPresentation
 import com.fkdeepal.tools.ext.utils.AppUtils
