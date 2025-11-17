@@ -22,7 +22,6 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
 class SettingActivity: AppCompatActivity() {
     companion object{
 
@@ -46,16 +45,12 @@ class SettingActivity: AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
     
-    // 在适当的位置添加，比如在设置项点击事件中
-    fun onLandColorSettingClicked() {
-        startActivity(Intent(this, LandColorSettingActivity::class.java))
-    }
-    
     class SettingFragment : PreferenceFragmentCompat() {
         private val mDisplayManager by lazy { ContextCompat.getSystemService<DisplayManager>(requireContext(), DisplayManager::class.java) }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.setting_user, rootKey)
+            
             findPreference<ListPreference>("key_setting_hud_display_id")?.let {
                 val displayData = arrayListOf<Display>()
                 mDisplayManager?.let {
@@ -64,18 +59,19 @@ class SettingActivity: AppCompatActivity() {
                 it.entries = displayData.map { "${it.displayId} - ${it.width}x${it.height} - ${if (it.state == Display.STATE_ON) "可用" else "不可用"}" }.toTypedArray()
                 it.entryValues  =  displayData.map { "${it.displayId}" }.toTypedArray()
             }
+            
             val swDebug = findPreference<SwitchPreferenceCompat>("key_is_debug")
-                swDebug?.let {
-                    it.onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener{
-                        override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
-                            if (newValue is Boolean){
-                                AppUtils.isDebug = newValue
-                            }
-                            return true; // 返回 true 表示接受新值
+            swDebug?.let {
+                it.onPreferenceChangeListener = object : Preference.OnPreferenceChangeListener{
+                    override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
+                        if (newValue is Boolean){
+                            AppUtils.isDebug = newValue
                         }
+                        return true
                     }
+                }
                 if (AppUtils.isDebug){
-                    it?.isVisible = true
+                    it.isVisible = true
                 }
             }
 
@@ -107,7 +103,14 @@ class SettingActivity: AppCompatActivity() {
                 }
                 it.summary = buildDate
             }
+            
+            // 新增：颜色设置点击事件
+            findPreference<Preference>("key_land_color_setting")?.let {
+                it.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
+                    startActivity(Intent(requireContext(), LandColorSettingActivity::class.java))
+                    true
+                }
+            }
         }
-
     }
 }
