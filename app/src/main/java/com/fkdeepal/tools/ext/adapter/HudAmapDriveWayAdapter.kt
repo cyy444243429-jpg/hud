@@ -1,4 +1,3 @@
-// app/src/main/java/com/fkdeepal/tools/ext/adapter/HudAmapDriveWayAdapter.kt
 package com.fkdeepal.tools.ext.adapter
 
 import android.util.Log
@@ -48,31 +47,31 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         logMemoryStatus("开始加载图标: $resourceName")
 
         runCatching {
-            // 使用 SVG 加载器加载 SVG 文件
-            val svgFileName = "$resourceName.xml"
-            Timber.tag(TAG).d("SVG 文件名称: $svgFileName")
+            // 提取图标编号 (从 "ic_land_66" 中提取 "66")
+            val iconNumber = resourceName.removePrefix("ic_land_")
+            Timber.tag(TAG).d("加载车道图标, 资源名: $resourceName, 编号: $iconNumber")
             
-            val drawable = SvgLoader.loadSvgFromAssets(mContext, svgFileName)
+            val drawable = SvgLoader.loadLandIcon(mContext, iconNumber)
             if (drawable != null) {
                 // 在主线程安全设置图片
                 viewBinding.root.post {
                     runCatching {
                         viewBinding.ivIcon.setImageDrawable(drawable)
-                        Timber.tag(TAG).d("成功加载 SVG: $resourceName")
-                        logMemoryStatus("SVG 加载完成: $resourceName")
+                        Timber.tag(TAG).d("成功加载车道图标: $resourceName")
+                        logMemoryStatus("车道图标加载完成: $resourceName")
                     }.onFailure { e ->
-                        Timber.tag(TAG).e(e, "设置 SVG 图片时发生错误: $resourceName")
+                        Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
                     }
                 }
             } else {
-                Timber.tag(TAG).w("SVG 加载为null: $resourceName")
+                Timber.tag(TAG).w("车道图标加载为null: $resourceName")
                 viewBinding.root.post {
                     viewBinding.ivIcon.setImageDrawable(null)
                     fail.invoke()
                 }
             }
         }.onFailure { exception ->
-            Timber.tag(TAG).e(exception, "加载 SVG 失败: $resourceName")
+            Timber.tag(TAG).e(exception, "加载车道图标失败: $resourceName")
             viewBinding.root.post {
                 viewBinding.ivIcon.setImageDrawable(null)
                 fail.invoke()
@@ -100,7 +99,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             if (icon.isNullOrBlank()) {
                 // 使用安全的默认资源加载
                 runCatching {
-                    val drawable = SvgLoader.loadSvgFromAssets(mContext, "ic_land_89.xml")
+                    val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position")
@@ -133,6 +132,14 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             val pw = PrintWriter(sw)
             exception.printStackTrace(pw)
             Timber.tag(TAG).e("异常堆栈:\n${sw.toString()}")
+            
+            // 异常情况下设置默认图标
+            try {
+                val defaultDrawable = SvgLoader.loadLandIcon(mContext, "89")
+                viewBinding.ivIcon.setImageDrawable(defaultDrawable)
+            } catch (e: Exception) {
+                viewBinding.ivIcon.setImageDrawable(null)
+            }
         }
     }
     
@@ -145,5 +152,20 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "获取内存状态失败")
         }
+    }
+    
+    /**
+     * 清理适配器相关的缓存
+     */
+    fun clearAdapterCache() {
+        Timber.tag(TAG).d("清理适配器缓存")
+        SvgLoader.clearCache()
+    }
+    
+    /**
+     * 获取缓存统计信息
+     */
+    fun getCacheStatistics(): String {
+        return SvgLoader.getCacheStats()
     }
 }
