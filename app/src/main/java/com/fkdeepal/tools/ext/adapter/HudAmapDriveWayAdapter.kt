@@ -11,9 +11,12 @@ import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
 import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.ItemHubDriveWayBinding
 import com.fkdeepal.tools.ext.utils.AppUtils
+import timber.log.Timber
 
-class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapter<ItemHubDriveWayBinding, AmapDriveWayInfoBean>(AppUtils.appContext,
-                                                                                                                                 mData) {
+class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapter<ItemHubDriveWayBinding, AmapDriveWayInfoBean>(
+    AppUtils.appContext,
+    mData
+) {
     private val mResources by lazy {
        mContext.resources
     }
@@ -28,6 +31,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun onCreateViewBinding(layoutInflater: LayoutInflater,
                                      parent: ViewGroup,
                                      viewType: Int): ItemHubDriveWayBinding {
+        Timber.tag(TAG).d("创建视图绑定")
         return ItemHubDriveWayBinding.inflate(layoutInflater, parent, false)
     }
 
@@ -45,22 +49,23 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                     viewBinding.root.post {
                         viewBinding.ivIcon.setImageDrawable(drawable)
                     }
+                    Timber.tag(TAG).d("成功加载矢量图: $resourceName")
                 } else {
-                    Log.w(TAG, "矢量图加载为null: $resourceName")
+                    Timber.tag(TAG).w("矢量图加载为null: $resourceName")
                     viewBinding.root.post {
                         viewBinding.ivIcon.setImageDrawable(null)
                         fail.invoke()
                     }
                 }
             } else {
-                Log.w(TAG, "未找到资源: $resourceName")
+                Timber.tag(TAG).w("未找到资源: $resourceName")
                 viewBinding.root.post {
                     viewBinding.ivIcon.setImageDrawable(null)
                     fail.invoke()
                 }
             }
         }.onFailure { exception ->
-            Log.e(TAG, "加载矢量图失败: $resourceName", exception)
+            Timber.tag(TAG).e(exception, "加载矢量图失败: $resourceName")
             viewBinding.root.post {
                 viewBinding.ivIcon.setImageDrawable(null)
                 fail.invoke()
@@ -71,6 +76,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
                                    position: Int) {
+        Timber.tag(TAG).d("设置视图持有者数据 - 位置: $position, 图标: ${item.drive_way_lane_Back_icon}")
         val icon = item.drive_way_lane_Back_icon
         viewBinding.tvValue.visibility = View.GONE
         if (icon.isNullOrBlank()) {
@@ -78,12 +84,15 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             runCatching {
                 val drawable = AppCompatResources.getDrawable(mContext, R.drawable.ic_land_89)
                 viewBinding.ivIcon.setImageDrawable(drawable)
+                Timber.tag(TAG).d("使用默认图标")
             }.onFailure {
+                Timber.tag(TAG).e(it, "加载默认图标失败")
                 viewBinding.ivIcon.setImageDrawable(null)
             }
         } else {
             val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
             setImageDrawable(viewBinding, resourceName) {
+                Timber.tag(TAG).d("图标加载失败，显示文本: $icon")
                 viewBinding.tvValue.visibility = View.VISIBLE
                 viewBinding.tvValue.text = icon
             }
