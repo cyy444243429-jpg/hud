@@ -123,7 +123,7 @@ class SettingActivity: AppCompatActivity() {
                 }
                 
                 val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.US)
-                val buildDate: String = dateFormat.format(buildDate)
+                val buildDate: String = dateFormat.format(buildTime)
                 
                 // 修复：使用类级别的变量
                 it.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
