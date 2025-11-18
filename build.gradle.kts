@@ -4,8 +4,9 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
+// 移除 buildscript 块中的 ApkUploadTools 依赖
 buildscript {
     dependencies {
-        classpath(libs.apkuploadtools)
+        // 移除这行：classpath(libs.apkuploadtools)
     }
 }
