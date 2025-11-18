@@ -35,10 +35,10 @@ object SvgLoader {
             inputStream = context.resources.openRawResource(resourceId)
             val svg = SVG.getFromInputStream(inputStream)
             
-            // 设置渲染选项确保正确渲染 - 使用正确的常量
+            // 只设置必要的属性，移除有问题的宽高比设置
             svg.setDocumentWidth("100%")
             svg.setDocumentHeight("100%")
-            svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.STRETCH)
+            // 移除有问题的行：svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.STRETCH)
             
             // 渲染为 Picture
             val picture = svg.renderToPicture()
@@ -70,6 +70,7 @@ object SvgLoader {
         }
     }
     
+    // ... 其余方法保持不变
     /**
      * 加载车道图标 - 从 res/drawable 加载
      */
