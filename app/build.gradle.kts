@@ -1,3 +1,4 @@
+// app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,6 +6,7 @@ plugins {
 
 android {
     compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "com.fkdeepal.tools.ext"
@@ -35,19 +37,33 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
+    // 强制使用最新版本的 AndroidX 库
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    
+    // 其他依赖使用版本目录
     implementation(libs.androidsvg)
     implementation(libs.timber)
-    
-    // 其他依赖
     implementation(libs.gson)
     implementation(libs.preference)
     implementation(libs.preference.ktx)
     implementation(libs.liveEventBus)
+    
+    // 强制解决版本冲突
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.appcompat:appcompat:1.7.0")
+            force("com.google.android.material:material:1.11.0")
+            force("androidx.core:core-ktx:1.12.0")
+        }
+    }
 }
