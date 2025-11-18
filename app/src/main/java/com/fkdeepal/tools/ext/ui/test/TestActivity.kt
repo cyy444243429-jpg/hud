@@ -5,8 +5,6 @@ import android.app.ActivityOptions
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.PixelFormat
-import android.hardware.display.DisplayManager
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.DisplayMetrics
@@ -28,8 +26,8 @@ import com.fkdeepal.tools.ext.manager.UserDataManager
 import com.fkdeepal.tools.ext.presentation.HudPresentation
 import com.fkdeepal.tools.ext.receiver.AmapNaviGuideReceiver
 import com.fkdeepal.tools.ext.ui.HudDisplayActivity
+import com.fkdeepal.tools.ext.utils.SvgLoader
 import com.jeremyliao.liveeventbus.LiveEventBus
-
 
 class TestActivity : BaseActivity<ActivityTestBinding>() {
     private var mHudPresentation: HudPresentation? = null
@@ -49,27 +47,10 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
         mViewBinding.apply {
             setOnClickListener(btnDisplayInfo, btnHudPresentation, btnHudActivity, btnHudCancel, btnAmap,
                                btnAmapHud, btnHud3, btnHud4)
-            setOnClickListener(btnNaviStart, btnLogChange)
+            setOnClickListener(btnNaviStart, btnLogChange, btnSvgDebug)
             etDisplayIndex.setText(UserDataManager.getHudDisplayId()?.toString())
         }
         displayLogState()
-        /* LiveEventBus.get(AmapNaviGuideEvent.KEY, AmapNaviGuideEvent::class.java)
-             .observe(mLifecycleOwner,{event ->
-                 if (mIsShowAmapInfo){
-                     runCatching {
-                         mViewBinding.tvResult.editableText.insert(0,event.info +"\n")
-                     }.onFailure {
-                         mViewBinding.tvResult.setText(event.info)
-                     }
-
-                 }
-                 floatAmapInfoBinding?.let {
-                     runCatching {
-                         it.tvResult.editableText.insert(0,event.info+"\n")
-                     }
-
-                 }
-             })*/
     }
 
     fun displayLogState() {
@@ -114,6 +95,7 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
     }
 
     override fun initViewBinding(layoutInflater: LayoutInflater): ActivityTestBinding? = ActivityTestBinding.inflate(layoutInflater)
+    
     override fun onViewClick(v: View) {
         mViewBinding.apply {
             when (v) {
@@ -185,6 +167,18 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                 btnLogChange -> {
                     AmapFloatManager.isLogEnable = !AmapFloatManager.isLogEnable
                     displayLogState()
+                }
+
+                btnSvgDebug -> {
+                    // 测试SVG加载
+                    val testIcons = listOf("1", "13", "38", "66", "89")
+                    val result = StringBuilder()
+                    testIcons.forEach { iconNumber ->
+                        val success = SvgLoader.debugLoadLandIcon(mActivity, iconNumber)
+                        result.append("ic_land_$iconNumber: ${if (success) "成功" else "失败"}\n")
+                    }
+                    toast("SVG调试完成，查看日志")
+                    tvResult.setText(result.toString())
                 }
 
                 btnHudCancel -> {
@@ -284,12 +278,6 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
             hideHudFloat()
 
             mHudFloatViewBinding = ActivityHudBinding.inflate(LayoutInflater.from(applicationContext))
-            /* val layoutParams:WindowManager.LayoutParams = WindowManager.LayoutParams(WindowManager.LayoutParams.MATCH_PARENT,
-                 WindowManager.LayoutParams.MATCH_PARENT,
-                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                 PixelFormat.RGBA_8888)*/
-            //   layoutParams.preferredDisplayModeId
             val layoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -298,7 +286,6 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                 PixelFormat.TRANSLUCENT
             );
             val view = mHudFloatViewBinding!!.root
-            //layoutParams.setDisplay(it);
             windowManager.addView(view, layoutParams)
         }
 
