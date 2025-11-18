@@ -33,24 +33,27 @@ object AmapFloatManager {
     private var mHudFloatNaviInfoBinding: FloatHudNaviInfoBinding? = null
     private var mWindowManager: WindowManager? = null
 
-    private val mNaviIconArray: IntArray = intArrayOf(R.drawable.ic_hud_sou_1, R.drawable.ic_hud_sou_2, R.drawable.ic_hud_sou_3,
-                                                      R.drawable.ic_hud_sou_4, R.drawable.ic_hud_sou_5, R.drawable.ic_hud_sou_6,
-                                                      R.drawable.ic_hud_sou_7, R.drawable.ic_hud_sou_8, R.drawable.ic_hud_sou_9,
-                                                      R.drawable.ic_hud_sou_10, R.drawable.ic_hud_sou_11, R.drawable.ic_hud_sou_12,
-                                                      R.drawable.ic_hud_sou_13, R.drawable.ic_hud_sou_14, R.drawable.ic_hud_sou_15,
-                                                      R.drawable.ic_hud_sou_16, R.drawable.ic_hud_sou_17, R.drawable.ic_hud_sou_18,
-                                                      R.drawable.ic_hud_sou_19, R.drawable.ic_hud_sou_20, R.drawable.ic_hud_sou_21,
-                                                      R.drawable.ic_hud_sou_22, R.drawable.ic_hud_sou_23, R.drawable.ic_hud_sou_24,
-                                                      R.drawable.ic_hud_sou_25, R.drawable.ic_hud_sou_26, R.drawable.ic_hud_sou_27,
-                                                      R.drawable.ic_hud_sou_28)
+    private val mNaviIconArray: IntArray = intArrayOf(
+        R.drawable.ic_hud_sou_1, R.drawable.ic_hud_sou_2, R.drawable.ic_hud_sou_3,
+        R.drawable.ic_hud_sou_4, R.drawable.ic_hud_sou_5, R.drawable.ic_hud_sou_6,
+        R.drawable.ic_hud_sou_7, R.drawable.ic_hud_sou_8, R.drawable.ic_hud_sou_9,
+        R.drawable.ic_hud_sou_10, R.drawable.ic_hud_sou_11, R.drawable.ic_hud_sou_12,
+        R.drawable.ic_hud_sou_13, R.drawable.ic_hud_sou_14, R.drawable.ic_hud_sou_15,
+        R.drawable.ic_hud_sou_16, R.drawable.ic_hud_sou_17, R.drawable.ic_hud_sou_18,
+        R.drawable.ic_hud_sou_19, R.drawable.ic_hud_sou_20, R.drawable.ic_hud_sou_21,
+        R.drawable.ic_hud_sou_22, R.drawable.ic_hud_sou_23, R.drawable.ic_hud_sou_24,
+        R.drawable.ic_hud_sou_25, R.drawable.ic_hud_sou_26, R.drawable.ic_hud_sou_27,
+        R.drawable.ic_hud_sou_28
+    )
+    
     private val mAmapDriveWayInfoData = arrayListOf<AmapDriveWayInfoBean>()
     private var mAmapDriveWayInfoAdapter: HudAmapDriveWayAdapter? = null
 
     private val mDistanceDecimalFormat = DecimalFormat("0.#")
     private val mNaviArriveTimeDateFormat = SimpleDateFormat("HH:mm")
     private val mNextRoadEnterTextColor = "#B3FFFFFF".toColorInt()
+    
     init {
-
         registerEvent()
     }
 
@@ -60,21 +63,20 @@ object AmapFloatManager {
      * 注册监听高德广播
      */
     private fun registerAMapReceiver() {
-
         amapNaviGuideReceiver = AmapNaviGuideReceiver()
         val intentFilter = IntentFilter()
         intentFilter.addAction(AmapNaviGuideReceiver.ACTION_NAVI_GUIDE)
         unregisterReceiver()
-        ContextCompat.registerReceiver(AppUtils.appContext, amapNaviGuideReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED) //再进行监听
-
+        ContextCompat.registerReceiver(AppUtils.appContext, amapNaviGuideReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED)
     }
 
     fun unregisterReceiver() {
         try {
-            if (amapNaviGuideReceiver != null) {
-                AppUtils.appContext.unregisterReceiver(amapNaviGuideReceiver); //先取消监听
+            amapNaviGuideReceiver?.let {
+                AppUtils.appContext.unregisterReceiver(it)
             }
         } catch (e: Exception) {
+            // 忽略取消注册异常
         }
     }
 
@@ -83,11 +85,8 @@ object AmapFloatManager {
         mHudFloatNaviInfoBinding?.let {
             mWindowManager?.removeView(it.root)
         }
-
         mHudFloatNaviInfoBinding = null
-
     }
-
 
     fun registerEvent() {
         LiveEventBus.get(AmapNaviDriveWayEvent.KEY, AmapNaviDriveWayEvent::class.java)
@@ -100,8 +99,8 @@ object AmapFloatManager {
                     }
                 }
                 mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
-
             }
+            
         LiveEventBus.get(AmapNaviGuideInfoEvent.KEY, AmapNaviGuideInfoEvent::class.java)
             .observeForever { event ->
                 mHudFloatNaviInfoBinding?.apply {
@@ -132,7 +131,6 @@ object AmapFloatManager {
                                 }
                             }
                         }
-
                         else -> {
                             val iconIndex = newIcon - 1
                             val iconResId = mNaviIconArray.getOrNull(iconIndex)
@@ -146,30 +144,25 @@ object AmapFloatManager {
                         }
                     }
 
-
                     val segRemainDis = info.segRemainDis
                     tvSegRemain.setText(buildSpannedString {
                         bold {
                             if (segRemainDis < 10) {
-
                                 append("现在")
-
                             } else if (segRemainDis > 1000) {
                                 append(mDistanceDecimalFormat.format(segRemainDis / 1000.0))
-
                             } else {
                                 append((segRemainDis).toString())
                             }
-
                         }
                         scale(0.7f) {
                             if (segRemainDis < 10) {
+                                // 什么都不添加
                             } else if (segRemainDis > 1000) {
                                 append("公里")
                             } else {
                                 append("米")
                             }
-
                             color(mNextRoadEnterTextColor) {
                                 append(" 进入")
                             }
@@ -180,7 +173,7 @@ object AmapFloatManager {
                     val routeRemainTime = info.routeRemainTime
                     if (routeRemainDis > -1 && routeRemainTime > -1) {
                         if (routeRemainDis == 0 || routeRemainTime == 0) {
-                            tvRemainInfo.setText("到达");
+                            tvRemainInfo.setText("到达")
                         } else {
                             tvRemainInfo.setText("${info.routeRemainDisStr} · ${info.routeRemainTimeStr}")
                         }
@@ -202,6 +195,7 @@ object AmapFloatManager {
                     }
                 }
             }
+            
         LiveEventBus.get(AmapNaviGuideEndEvent.KEY, AmapNaviGuideEndEvent::class.java)
             .observeForever { event ->
                 mHudFloatNaviInfoBinding?.apply {
@@ -209,17 +203,14 @@ object AmapFloatManager {
                     tvIconType.visibility = View.GONE
                     tvCameraSpeed.visibility = View.GONE
                     tvSegRemain.setText("")
-
                     tvRoadName.setText("")
                     tvRemainInfo.setText("")
                     tvArriveTime.setText("")
-
                 }
             }
     }
 
-    fun showFloat(context: Context, elevation: Float? = 0.001f,
-                  translationZ: Float = 0.01f) {
+    fun showFloat(context: Context, elevation: Float? = 0.001f, translationZ: Float = 0.01f) {
         hideHudFloat()
         registerAMapReceiver()
 
@@ -228,10 +219,10 @@ object AmapFloatManager {
         val naviInfoLayoutParams = WindowManager.LayoutParams(
             275,
             134,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, // 窗口类型
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
-        );
+        )
 
         naviInfoLayoutParams.apply {
             x = 0
@@ -240,20 +231,14 @@ object AmapFloatManager {
         mAmapDriveWayInfoAdapter = HudAmapDriveWayAdapter(mAmapDriveWayInfoData)
         mHudFloatNaviInfoBinding?.rvDriverWay?.adapter = mAmapDriveWayInfoAdapter
 
-
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
 
         runCatching {
-            if (elevation != null) {
-                naviInfoView.elevation = elevation
-            }
-
+            elevation?.let { naviInfoView.elevation = it }
             naviInfoView.translationZ = translationZ
-
         }
         naviInfoLayoutParams.gravity = Gravity.RIGHT or Gravity.BOTTOM
 
         mWindowManager?.addView(naviInfoView, naviInfoLayoutParams)
-
     }
 }
