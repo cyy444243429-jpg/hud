@@ -9,11 +9,3 @@ buildscript {
         classpath(libs.apkuploadtools)
     }
 }
-
-// 添加全局配置
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
