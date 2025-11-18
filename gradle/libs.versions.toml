@@ -1,36 +1,37 @@
 [versions]
 agp = "8.13.0"
 kotlin = "2.0.21"
-coreKtx = "1.12.0"  # 更新：1.10.1 → 1.12.0
+coreKtx = "1.12.0"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
-appcompat = "1.7.0"  # 更新：1.6.1 → 1.7.0
-material = "1.11.0"  # 更新：1.10.0 → 1.11.0
-apkuploadtools = "25100916"
+appcompat = "1.7.0"
+material = "1.11.0"
+# 移除 apkuploadtools 版本号
 gson = "2.10.1"
 timber = "5.0.1"
 preference = "1.2.0"
-constraintlayout = "2.1.4"  # 新增
-androidsvg = "1.4"  # 新增
+constraintlayout = "2.1.4"
+androidsvg = "1.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-apkuploadtools = { module = "com.github.AiTiWang:ApkUploadTools", version.ref = "apkuploadtools" }
+# 修改 ApkUploadTools 依赖配置
+apkuploadtools = { group = "com.github.AiTiWang", name = "ApkUploadTools", version = "25.10.9.16" }
 
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
-androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }  # 新增
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 liveEventBus = { group = "com.github.neo-turak", name = "LiveEventBus", version = "1.8.1" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 preference = { module = "androidx.preference:preference", version.ref = "preference" }
 preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
-androidsvg = { group = "com.caverock", name = "androidsvg", version.ref = "androidsvg" }  # 新增
+androidsvg = { group = "com.caverock", name = "androidsvg", version.ref = "androidsvg" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
