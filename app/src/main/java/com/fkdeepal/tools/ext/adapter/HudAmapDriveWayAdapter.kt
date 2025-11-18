@@ -61,6 +61,9 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         logMemoryStatus("车道图标加载完成: $resourceName")
                     }.onFailure { e ->
                         Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
+                        // 加载失败时设置透明背景
+                        viewBinding.ivIcon.setImageDrawable(null)
+                        fail.invoke()
                     }
                 }
             } else {
@@ -133,13 +136,8 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             exception.printStackTrace(pw)
             Timber.tag(TAG).e("异常堆栈:\n${sw.toString()}")
             
-            // 异常情况下设置默认图标
-            try {
-                val defaultDrawable = SvgLoader.loadLandIcon(mContext, "89")
-                viewBinding.ivIcon.setImageDrawable(defaultDrawable)
-            } catch (e: Exception) {
-                viewBinding.ivIcon.setImageDrawable(null)
-            }
+            // 异常情况下设置透明背景
+            viewBinding.ivIcon.setImageDrawable(null)
         }
     }
     
