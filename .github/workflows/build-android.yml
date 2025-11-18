@@ -27,7 +27,7 @@ jobs:
       run: ./gradlew clean
         
     - name: Build APK
-      run: ./gradlew assembleDebug --stacktrace --no-daemon
+      run: ./gradlew assembleDebug --stacktrace --no-daemon --refresh-dependencies  # 添加 --refresh-dependencies
         
     - name: Find and list APK files
       run: |
