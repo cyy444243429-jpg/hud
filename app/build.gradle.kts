@@ -6,7 +6,8 @@ plugins {
 
 android {
     compileSdk = 34
-    
+    buildToolsVersion = "34.0.0"
+
     defaultConfig {
         applicationId = "com.fkdeepal.tools.ext"
         minSdk = 24
@@ -38,12 +39,16 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")  // 更新到最新版本
+    implementation("com.google.android.material:material:1.11.0")  // 更新到最新版本
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     
     // 添加 AndroidSVG 依赖
