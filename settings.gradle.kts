@@ -7,10 +7,6 @@ pluginManagement {
                 includeGroupByRegex("androidx.*")
             }
         }
-        maven(url = "https://maven.aliyun.com/repository/google")
-        maven(url = "https://maven.aliyun.com/repository/public")
-        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
-        maven(url = "https://jitpack.io")
         mavenCentral()
         gradlePluginPortal()
     }
@@ -18,16 +14,16 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
-        maven(url = "https://maven.aliyun.com/repository/google")
-        maven(url = "https://maven.aliyun.com/repository/public")
-        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
-        maven(url = "https://jitpack.io")
-
+        // 主要使用官方仓库
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")
+        
+        // 阿里云作为备用（可选）
+        maven(url = "https://maven.aliyun.com/repository/google")
+        maven(url = "https://maven.aliyun.com/repository/public")
     }
 }
 
 rootProject.name = "DeepalTools"
 include(":app")
- 
