@@ -17,6 +17,9 @@ android {
         
         vectorDrawables.useSupportLibrary = true
         namespace = "com.fkdeepal.tools.ext"
+        
+        // 添加构建时间字段
+        buildConfigField("long", "BUILD_TIME_MILLIS", "${System.currentTimeMillis()}L")
     }
     
     buildTypes {
@@ -30,12 +33,12 @@ android {
     }
     
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8"
     }
 
     buildFeatures {
