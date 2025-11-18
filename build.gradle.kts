@@ -3,8 +3,17 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
 }
+
 buildscript {
     dependencies {
         classpath(libs.apkuploadtools)
+    }
+}
+
+// 添加全局配置
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
