@@ -3,6 +3,7 @@ package com.fkdeepal.tools.ext.utils
 import android.content.Context
 import android.graphics.Picture
 import android.graphics.drawable.PictureDrawable
+import androidx.core.content.res.ResourcesCompat
 import com.caverock.androidsvg.SVG
 import timber.log.Timber
 import java.io.InputStream
@@ -12,21 +13,27 @@ object SvgLoader {
     private val cache = mutableMapOf<String, PictureDrawable>()
     
     /**
-     * 从 assets 加载 SVG 文件
+     * 从 res/drawable 加载 SVG 文件
      */
-    fun loadSvgFromAssets(context: Context, fileName: String): PictureDrawable? {
+    fun loadSvgFromResources(context: Context, resourceName: String): PictureDrawable? {
         // 检查缓存
-        cache[fileName]?.let {
-            Timber.tag(TAG).d("从缓存加载 SVG: $fileName")
+        cache[resourceName]?.let {
+            Timber.tag(TAG).d("从缓存加载 SVG: $resourceName")
             return it
         }
         
         var inputStream: InputStream? = null
         return try {
-            Timber.tag(TAG).d("开始加载 SVG: $fileName")
+            Timber.tag(TAG).d("开始加载 SVG: $resourceName")
             
-            // 从 assets 读取 SVG 文件
-            inputStream = context.assets.open("svg/$fileName")
+            // 从 res/drawable 读取 SVG 文件
+            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            if (resourceId == 0) {
+                Timber.tag(TAG).e("找不到资源: $resourceName")
+                return null
+            }
+            
+            inputStream = context.resources.openRawResource(resourceId)
             val svg = SVG.getFromInputStream(inputStream)
             
             // 设置渲染选项确保正确渲染
@@ -46,13 +53,13 @@ object SvgLoader {
             val drawable = PictureDrawable(picture)
             
             // 加入缓存
-            cache[fileName] = drawable
+            cache[resourceName] = drawable
             
-            Timber.tag(TAG).d("成功加载 SVG: $fileName, 尺寸: ${picture.width}x${picture.height}")
+            Timber.tag(TAG).d("成功加载 SVG: $resourceName, 尺寸: ${picture.width}x${picture.height}")
             drawable
             
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "加载 SVG 失败: $fileName - ${e.message}")
+            Timber.tag(TAG).e(e, "加载 SVG 失败: $resourceName - ${e.message}")
             null
         } finally {
             // 确保流被关闭
@@ -65,30 +72,36 @@ object SvgLoader {
     }
     
     /**
-     * 加载车道图标 - 增强版本
+     * 加载车道图标 - 从 res/drawable 加载
      */
     fun loadLandIcon(context: Context, iconNumber: String): PictureDrawable? {
-        val fileName = "ic_land_$iconNumber.xml"
-        return loadSvgFromAssets(context, fileName)
+        val resourceName = "ic_land_$iconNumber"
+        return loadSvgFromResources(context, resourceName)
     }
     
     /**
      * 调试方法：检查SVG文件是否能正常加载
      */
     fun debugLoadLandIcon(context: Context, iconNumber: String): Boolean {
-        val fileName = "ic_land_$iconNumber.xml"
+        val resourceName = "ic_land_$iconNumber"
         return try {
-            val inputStream = context.assets.open("svg/$fileName")
+            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            if (resourceId == 0) {
+                Timber.tag(TAG).e("调试加载失败: 找不到资源 $resourceName")
+                return false
+            }
+            
+            val inputStream = context.resources.openRawResource(resourceId)
             val svg = SVG.getFromInputStream(inputStream)
             inputStream.close()
             
             val picture = svg.renderToPicture()
             val isValid = picture.width > 0 && picture.height > 0
             
-            Timber.tag(TAG).d("调试加载 SVG $fileName: 有效=$isValid, 尺寸=${picture.width}x${picture.height}")
+            Timber.tag(TAG).d("调试加载 SVG $resourceName: 有效=$isValid, 尺寸=${picture.width}x${picture.height}")
             isValid
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "调试加载 SVG 失败: $fileName - ${e.message}")
+            Timber.tag(TAG).e(e, "调试加载 SVG 失败: $resourceName - ${e.message}")
             false
         }
     }
@@ -102,16 +115,16 @@ object SvgLoader {
         
         // 检查 ic_land_0 到 ic_land_83
         for (i in 0..83) {
-            val fileName = "ic_land_$i.xml"
-            if (isSvgFileExists(context, fileName)) {
-                existingFiles.add(fileName)
+            val resourceName = "ic_land_$i"
+            if (isSvgFileExists(context, resourceName)) {
+                existingFiles.add(resourceName)
             } else {
-                missingFiles.add(fileName)
+                missingFiles.add(resourceName)
             }
         }
         
         // 检查 ic_land_89
-        val land89File = "ic_land_89.xml"
+        val land89File = "ic_land_89"
         if (isSvgFileExists(context, land89File)) {
             existingFiles.add(land89File)
         } else {
@@ -129,10 +142,10 @@ object SvgLoader {
     /**
      * 检查 SVG 文件是否存在
      */
-    private fun isSvgFileExists(context: Context, fileName: String): Boolean {
+    private fun isSvgFileExists(context: Context, resourceName: String): Boolean {
         return try {
-            context.assets.open("svg/$fileName").close()
-            true
+            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            resourceId != 0
         } catch (e: Exception) {
             false
         }
@@ -169,9 +182,9 @@ object SvgLoader {
             commonIcons.forEach { iconNumber ->
                 try {
                     loadLandIcon(context, iconNumber)
-                    Timber.tag(TAG).d("预加载 SVG 成功: ic_land_$iconNumber.xml")
+                    Timber.tag(TAG).d("预加载 SVG 成功: ic_land_$iconNumber")
                 } catch (e: Exception) {
-                    Timber.tag(TAG).w("预加载 SVG 失败: ic_land_$iconNumber.xml - ${e.message}")
+                    Timber.tag(TAG).w("预加载 SVG 失败: ic_land_$iconNumber - ${e.message}")
                 }
             }
         } catch (e: Exception) {
