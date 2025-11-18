@@ -16,7 +16,7 @@ androidsvg = "1.4"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-# 使用正确的 JitPack 依赖格式
+# 使用正确的 JitPack 格式
 apkuploadtools = { module = "com.github.AiTiWang:ApkUploadTools", version = "25.10.9.16" }
 
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
