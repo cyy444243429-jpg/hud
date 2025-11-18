@@ -58,12 +58,18 @@ dependencies {
     implementation(libs.preference.ktx)
     implementation(libs.liveEventBus)
     
-    // 强制解决版本冲突
+    // 强制解决版本冲突 - 添加更多关键依赖
     configurations.all {
         resolutionStrategy {
             force("androidx.appcompat:appcompat:1.7.0")
             force("com.google.android.material:material:1.11.0")
             force("androidx.core:core-ktx:1.12.0")
+            force("androidx.activity:activity:1.8.0")      // 这个库引入了 windowOptOutEdgeToEdgeEnforcement
+            force("androidx.fragment:fragment:1.7.0")     // 这个库也很关键
+            force("androidx.lifecycle:lifecycle-viewmodel:2.8.0")
+            force("androidx.lifecycle:lifecycle-livedata:2.8.0")
+            force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
+            force("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
         }
     }
 }
