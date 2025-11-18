@@ -26,6 +26,9 @@ jobs:
     - name: Clean project
       run: ./gradlew clean
 
+    - name: Generate ViewBinding classes
+      run: ./gradlew :app:compileDebugKotlin --no-daemon
+
     - name: Build APK with retry
       run: |
         for i in {1..3}; do
