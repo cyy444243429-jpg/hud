@@ -5,6 +5,7 @@ import android.graphics.Picture
 import android.graphics.drawable.PictureDrawable
 import com.caverock.androidsvg.SVG
 import timber.log.Timber
+import java.io.InputStream
 
 object SvgLoader {
     private const val TAG = "SvgLoader"
@@ -20,19 +21,28 @@ object SvgLoader {
             return it
         }
         
+        var inputStream: InputStream? = null
         return try {
             Timber.tag(TAG).d("开始加载 SVG: $fileName")
             
             // 从 assets 读取 SVG 文件
-            val inputStream = context.assets.open("svg/$fileName")
+            inputStream = context.assets.open("svg/$fileName")
             val svg = SVG.getFromInputStream(inputStream)
-            inputStream.close()
             
-            // SVG 文件本身已经包含了完整的坐标和变换信息
-            // AndroidSVG 会完全保留原始的 transform、translate、scale 等
+            // 设置渲染选项确保正确渲染
+            svg.setDocumentWidth("100%")
+            svg.setDocumentHeight("100%")
+            svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.LETTERBOX)
             
             // 渲染为 Picture
             val picture = svg.renderToPicture()
+            
+            // 检查渲染结果
+            if (picture.width <= 0 || picture.height <= 0) {
+                Timber.tag(TAG).w("SVG 渲染尺寸异常: ${picture.width}x${picture.height}")
+                return null
+            }
+            
             val drawable = PictureDrawable(picture)
             
             // 加入缓存
@@ -42,17 +52,45 @@ object SvgLoader {
             drawable
             
         } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "加载 SVG 失败: $fileName")
+            Timber.tag(TAG).e(e, "加载 SVG 失败: $fileName - ${e.message}")
             null
+        } finally {
+            // 确保流被关闭
+            try {
+                inputStream?.close()
+            } catch (e: Exception) {
+                Timber.tag(TAG).w("关闭输入流失败: ${e.message}")
+            }
         }
     }
     
     /**
-     * 加载车道图标
+     * 加载车道图标 - 增强版本
      */
     fun loadLandIcon(context: Context, iconNumber: String): PictureDrawable? {
         val fileName = "ic_land_$iconNumber.xml"
         return loadSvgFromAssets(context, fileName)
+    }
+    
+    /**
+     * 调试方法：检查SVG文件是否能正常加载
+     */
+    fun debugLoadLandIcon(context: Context, iconNumber: String): Boolean {
+        val fileName = "ic_land_$iconNumber.xml"
+        return try {
+            val inputStream = context.assets.open("svg/$fileName")
+            val svg = SVG.getFromInputStream(inputStream)
+            inputStream.close()
+            
+            val picture = svg.renderToPicture()
+            val isValid = picture.width > 0 && picture.height > 0
+            
+            Timber.tag(TAG).d("调试加载 SVG $fileName: 有效=$isValid, 尺寸=${picture.width}x${picture.height}")
+            isValid
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "调试加载 SVG 失败: $fileName - ${e.message}")
+            false
+        }
     }
     
     /**
