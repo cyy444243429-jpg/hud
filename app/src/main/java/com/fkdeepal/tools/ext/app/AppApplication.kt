@@ -1,4 +1,3 @@
-// app/src/main/java/com/fkdeepal/tools/ext/app/AppApplication.kt
 package com.fkdeepal.tools.ext.app
 
 import android.app.Application
@@ -6,6 +5,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import com.fkdeepal.tools.ext.timber.FileLoggingTree
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.FileUtils
+import com.fkdeepal.tools.ext.utils.SvgLoader
 import timber.log.Timber
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -41,8 +41,27 @@ class AppApplication : Application(){
         if (AppUtils.isDebug){
             Timber.plant(FileLoggingTree(FileUtils.getLogCacheFile(AppUtils.appContext)))
             Timber.d("文件日志系统已启用 - 全局异常捕获已设置")
+            
+            // 调试：检查SVG文件加载情况
+            runCatching {
+                val commonIcons = listOf("1", "13", "38", "66", "89")
+                commonIcons.forEach { iconNumber ->
+                    val success = SvgLoader.debugLoadLandIcon(this, iconNumber)
+                    Timber.d("SVG调试 - ic_land_$iconNumber: ${if (success) "成功" else "失败"}")
+                }
+            }.onFailure {
+                Timber.e(it, "SVG调试失败")
+            }
         }
         Timber.plant(Timber.DebugTree())
+        
+        // 预加载 SVG 文件
+        runCatching {
+            SvgLoader.preloadCommonSvgs(this)
+            Timber.d("SVG 预加载完成")
+        }.onFailure {
+            Timber.e(it, "SVG 预加载失败")
+        }
         
         logOperation("AppApplication.onCreate() 完成")
     }
