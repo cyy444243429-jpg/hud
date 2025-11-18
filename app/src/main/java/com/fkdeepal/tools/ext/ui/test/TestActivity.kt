@@ -2,9 +2,12 @@ package com.fkdeepal.tools.ext.ui.test
 
 import android.app.Activity
 import android.app.ActivityOptions
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.DisplayMetrics
@@ -15,7 +18,6 @@ import android.view.View
 import android.view.WindowManager
 import androidx.core.content.ContextCompat
 import com.fkdeepal.tools.ext.AmapFloatManager
-import com.fkdeepal.tools.ext.BuildConfig
 import com.fkdeepal.tools.ext.base.BaseActivity
 import com.fkdeepal.tools.ext.databinding.ActivityHudBinding
 import com.fkdeepal.tools.ext.databinding.ActivityTestBinding
@@ -31,23 +33,23 @@ import com.jeremyliao.liveeventbus.LiveEventBus
 
 class TestActivity : BaseActivity<ActivityTestBinding>() {
     private var mHudPresentation: HudPresentation? = null
-    private val mDisplayManager by lazy { ContextCompat.getSystemService<DisplayManager>(this, DisplayManager::class.java) }
+    private val mDisplayManager: DisplayManager? by lazy { 
+        ContextCompat.getSystemService(this, DisplayManager::class.java) 
+    }
     private var mIsShowAmapInfo: Boolean = false
 
     companion object {
-
         fun startActivity(activity: Activity) {
             val intent = Intent(activity, TestActivity::class.java)
             activity.startActivity(intent)
         }
     }
 
-
     override fun initViews() {
         mViewBinding.apply {
             setOnClickListener(btnDisplayInfo, btnHudPresentation, btnHudActivity, btnHudCancel, btnAmap,
                                btnAmapHud, btnHud3, btnHud4)
-            setOnClickListener(btnNaviStart, btnLogChange, btnSvgDebug)
+            setOnClickListener(btnNaviStart, btnLogChange)
             etDisplayIndex.setText(UserDataManager.getHudDisplayId()?.toString())
         }
         displayLogState()
@@ -58,13 +60,13 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
     }
 
     fun getHubDisplay(): Display? {
-        val index = mViewBinding.etDisplayIndex.text.toString()
-            .toIntOrNull()
+        val index = mViewBinding.etDisplayIndex.text.toString().toIntOrNull()
         if (index == null) {
             toast("请填写副屏信息")
             return null
         }
-        val display = mDisplayManager?.displays?.get(index)
+        val displays = mDisplayManager?.displays
+        val display = displays?.getOrNull(index)
         if (display == null) {
             toast("副屏index有误")
             return null
@@ -80,18 +82,13 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                 return
             }
             getHubDisplay()?.let {
-
                 val options = ActivityOptions.makeBasic()
-                options.setLaunchDisplayId(it.getDisplayId())
+                options.setLaunchDisplayId(it.displayId)
                 val intent = Intent(mActivity, HudDisplayActivity::class.java)
                 intent.putExtra("type", type)
-                startActivity(intent, options.toBundle());
+                startActivity(intent, options.toBundle())
             }
         }
-    }
-
-    fun getCarInfo() {
-        // 初始化 Car 服务
     }
 
     override fun initViewBinding(layoutInflater: LayoutInflater): ActivityTestBinding? = ActivityTestBinding.inflate(layoutInflater)
@@ -101,8 +98,8 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
             when (v) {
                 btnDisplayInfo -> {
                     mIsShowAmapInfo = false
-                    mDisplayManager?.let {
-                        val displays = it.getDisplays()
+                    mDisplayManager?.let { manager ->
+                        val displays = manager.displays
                         val stringBuilder = StringBuilder()
                         for (display in displays) {
                             val name = display.name
@@ -110,7 +107,7 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                                 .append(" -- ")
                                 .append(name)
                                 .append("\n")
-                            val metrics = DisplayMetrics();
+                            val metrics = DisplayMetrics()
                             display.getMetrics(metrics)
                             stringBuilder.append("      width:")
                                 .append(display.width)
@@ -130,17 +127,16 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                             stringBuilder.append("      scaledDensity   :")
                                 .append(metrics.scaledDensity)
                                 .append("\n")
-                            val supportedModes = display.getSupportedModes();
+                            val supportedModes = display.supportedModes
                             stringBuilder.append("      支持模式")
                                 .append("\n")
                             for (mode in supportedModes) {
-                                stringBuilder.append("" + mode.getPhysicalWidth() + "x" + mode.getPhysicalHeight() + " @ " + mode.getRefreshRate() + "Hz")
+                                stringBuilder.append("" + mode.physicalWidth + "x" + mode.physicalHeight + " @ " + mode.refreshRate + "Hz")
                                     .append("\n")
                             }
                         }
                         tvResult.setText(stringBuilder)
                     }
-
                 }
 
                 btnHudPresentation -> {
@@ -153,7 +149,6 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
 
                 btnHudActivity -> {
                     startHudActivity(1)
-
                 }
 
                 btnHud3 -> {
@@ -169,18 +164,6 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                     displayLogState()
                 }
 
-                btnSvgDebug -> {
-                    // 测试SVG加载
-                    val testIcons = listOf("1", "13", "38", "66", "89")
-                    val result = StringBuilder()
-                    testIcons.forEach { iconNumber ->
-                        val success = SvgLoader.debugLoadLandIcon(mActivity, iconNumber)
-                        result.append("ic_land_$iconNumber: ${if (success) "成功" else "失败"}\n")
-                    }
-                    toast("SVG调试完成，查看日志")
-                    tvResult.setText(result.toString())
-                }
-
                 btnHudCancel -> {
                     mHudPresentation?.dismiss()
                     AmapFloatManager.hideHudFloat()
@@ -191,33 +174,31 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                 btnAmapHud -> {
                     getHubDisplay()?.let {
                         val id = it.displayId
-                        val intent = Intent();
-                        intent.setAction("AUTONAVI_STANDARD_BROADCAST_RECV");
-                        intent.putExtra("KEY_TYPE", 10104);
-                        intent.putExtra("EXTRA_EXTERNAL_ENGINE_ID", id);
+                        val intent = Intent()
+                        intent.setAction("AUTONAVI_STANDARD_BROADCAST_RECV")
+                        intent.putExtra("KEY_TYPE", 10104)
+                        intent.putExtra("EXTRA_EXTERNAL_ENGINE_ID", id)
                         // 仪表模式   0 : 2D车首上 1 : 2D北首上  2 : 3D车首上 其它值表示取消固定
-                        intent.putExtra("EXTRA_EXTERNAL_MAP_MODE", 2);
+                        intent.putExtra("EXTRA_EXTERNAL_MAP_MODE", 2)
                         // 仪表车标位置 1 : 左侧  2 : 居中 3 : 右侧  其它值表示取消固定
                         intent.putExtra("EXTRA_EXTERNAL_MAP_POSITION", 1)
                         // 仪表比例尺级别（0~17）
                         intent.putExtra("EXTRA_EXTERNAL_MAP_LEVEL", 17)
-                        intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                        intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
                         sendBroadcast(intent)
 
                         toast("已发送广播")
                         // 开启路况大图
                         v.postDelayed({
-                                          val intent = Intent()
-                                          intent.setAction("AUTONAVI_STANDARD_BROADCAST_RECV")
-                                          intent.putExtra("KEY_TYPE", 10105)
-                                          intent.putExtra("EXTRA_EXTERNAL_ENGINE_ID", 3)
-                                          intent.putExtra("EXTRA_EXTERNAL_CROSS_CONTROL", true)
-                                          intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                                          sendBroadcast(intent)
-                                      }, 2000)
+                            val intent = Intent()
+                            intent.setAction("AUTONAVI_STANDARD_BROADCAST_RECV")
+                            intent.putExtra("KEY_TYPE", 10105)
+                            intent.putExtra("EXTRA_EXTERNAL_ENGINE_ID", 3)
+                            intent.putExtra("EXTRA_EXTERNAL_CROSS_CONTROL", true)
+                            intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+                            sendBroadcast(intent)
+                        }, 2000)
                     }
-
-
                 }
 
                 btnAmap -> {
@@ -255,11 +236,11 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
                     intent.putExtra("KEY_RECYLE_SIMUNAVI", true)
                     sendBroadcast(intent)
                     v.postDelayed({
-                                      val intent2 = Intent()
-                                      intent2.setAction("AUTONAVI_STANDARD_BROADCAST_RECV")
-                                      intent2.putExtra("KEY_TYPE", 10031)
-                                      sendBroadcast(intent2)
-                                  }, 1000)
+                        val intent2 = Intent()
+                        intent2.setAction("AUTONAVI_STANDARD_BROADCAST_RECV")
+                        intent2.putExtra("KEY_TYPE", 10031)
+                        sendBroadcast(intent2)
+                    }, 1000)
                 }
             }
         }
@@ -281,14 +262,13 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
             val layoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, // 窗口类型
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT
-            );
+            )
             val view = mHudFloatViewBinding!!.root
             windowManager.addView(view, layoutParams)
         }
-
     }
 
     private var floatAmapInfoBinding: FloatAmapInfoBinding? = null
@@ -302,24 +282,22 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
     private fun showAmapInfoFloat() {
         hideAmapInfoFloat()
         floatAmapInfoBinding = FloatAmapInfoBinding.inflate(layoutInflater, null, false)
-        var layoutParam = WindowManager.LayoutParams()
-            .apply {
-                type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-                } else {
-                    WindowManager.LayoutParams.TYPE_PHONE
-                }
-                format = PixelFormat.RGBA_8888
-                flags =
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                //位置大小设置
-                width = 300
-                height = 400
-                gravity = Gravity.RIGHT or Gravity.TOP
-                //设置剧中屏幕显示
-                //x = 0
-                y = 150
+        val layoutParam = WindowManager.LayoutParams().apply {
+            type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                WindowManager.LayoutParams.TYPE_PHONE
             }
+            format = PixelFormat.RGBA_8888
+            flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+            //位置大小设置
+            width = 300
+            height = 400
+            gravity = Gravity.RIGHT or Gravity.TOP
+            //设置剧中屏幕显示
+            //x = 0
+            y = 150
+        }
         windowManager.addView(floatAmapInfoBinding!!.root, layoutParam)
     }
 
@@ -337,19 +315,18 @@ class TestActivity : BaseActivity<ActivityTestBinding>() {
         amapNaviGuideReceiver = AmapNaviGuideReceiver()
         val intentFilter = IntentFilter()
         intentFilter.addAction(AmapNaviGuideReceiver.ACTION_NAVI_GUIDE)
-        //intentFilter.addAction(SEND_ACTION)
         unregisterReceiver()
-        ContextCompat.registerReceiver(mActivity, amapNaviGuideReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED) //再进行监听
+        ContextCompat.registerReceiver(mActivity, amapNaviGuideReceiver, intentFilter, ContextCompat.RECEIVER_EXPORTED)
         showAmapInfoFloat()
-
     }
 
     fun unregisterReceiver() {
         try {
-            if (amapNaviGuideReceiver != null) {
-                unregisterReceiver(amapNaviGuideReceiver); //先取消监听
+            amapNaviGuideReceiver?.let {
+                unregisterReceiver(it)
             }
         } catch (e: Exception) {
+            // 忽略异常
         }
     }
 }
