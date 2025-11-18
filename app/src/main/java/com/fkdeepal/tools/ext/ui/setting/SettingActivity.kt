@@ -113,8 +113,17 @@ class SettingActivity: AppCompatActivity() {
 
             findPreference<PreferenceScreen>("key_build_time")?.let {
                 Timber.tag(TAG).d("初始化构建时间")
+                
+                // 安全地获取构建时间，如果不存在则使用当前时间
+                val buildTime = try {
+                    BuildConfig.BUILD_TIME_MILLIS
+                } catch (e: Exception) {
+                    Timber.tag(TAG).w("BUILD_TIME_MILLIS 未定义，使用当前时间")
+                    System.currentTimeMillis()
+                }
+                
                 val dateFormat = SimpleDateFormat("yyyyMMddHHmm", Locale.US)
-                val buildDate: String = dateFormat.format(BuildConfig.BUILD_TIME_MILLIS)
+                val buildDate: String = dateFormat.format(buildDate)
                 
                 // 修复：使用类级别的变量
                 it.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
