@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    compileSdk = 34
-    buildToolsVersion = "34.0.0"
+    compileSdk = 35
+    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         applicationId = "com.fkdeepal.tools.ext"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         
@@ -44,11 +44,11 @@ android {
 }
 
 dependencies {
-    // 强制使用最新版本的 AndroidX 库
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    // 使用版本目录中的依赖
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
     
     // 其他依赖使用版本目录
     implementation(libs.androidsvg)
@@ -58,18 +58,12 @@ dependencies {
     implementation(libs.preference.ktx)
     implementation(libs.liveEventBus)
     
-    // 强制解决版本冲突 - 添加更多关键依赖
+    // 强制解决版本冲突
     configurations.all {
         resolutionStrategy {
-            force("androidx.appcompat:appcompat:1.7.0")
-            force("com.google.android.material:material:1.11.0")
-            force("androidx.core:core-ktx:1.12.0")
-            force("androidx.activity:activity:1.8.0")      // 这个库引入了 windowOptOutEdgeToEdgeEnforcement
-            force("androidx.fragment:fragment:1.7.0")     // 这个库也很关键
-            force("androidx.lifecycle:lifecycle-viewmodel:2.8.0")
-            force("androidx.lifecycle:lifecycle-livedata:2.8.0")
-            force("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
-            force("androidx.lifecycle:lifecycle-livedata-ktx:2.8.0")
+            force(libs.androidx.appcompat.get())
+            force(libs.material.get())
+            force(libs.androidx.core.ktx.get())
         }
     }
 }
