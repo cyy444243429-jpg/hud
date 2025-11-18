@@ -23,11 +23,25 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x gradlew
 
-    - name: Clean Gradle cache
+    - name: Clean project
       run: ./gradlew clean
-        
-    - name: Build APK
-      run: ./gradlew assembleDebug --stacktrace --no-daemon --refresh-dependencies  # 添加 --refresh-dependencies
+
+    - name: Build APK with retry
+      run: |
+        for i in {1..3}; do
+          echo "构建尝试第 $i 次..."
+          if ./gradlew assembleDebug --stacktrace --no-daemon --refresh-dependencies; then
+            echo "构建成功！第 $i 次尝试完成"
+            break
+          else
+            echo "第 $i 次构建失败，5秒后重试..."
+            if [ $i -eq 3 ]; then
+              echo "所有重试都失败了"
+              exit 1
+            fi
+            sleep 5
+          fi
+        done
         
     - name: Find and list APK files
       run: |
