@@ -35,10 +35,10 @@ object SvgLoader {
             inputStream = context.resources.openRawResource(resourceId)
             val svg = SVG.getFromInputStream(inputStream)
             
-            // 设置渲染选项确保正确渲染
+            // 设置渲染选项确保正确渲染 - 使用正确的常量
             svg.setDocumentWidth("100%")
             svg.setDocumentHeight("100%")
-            svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.LETTERBOX)
+            svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.STRETCH)
             
             // 渲染为 Picture
             val picture = svg.renderToPicture()
