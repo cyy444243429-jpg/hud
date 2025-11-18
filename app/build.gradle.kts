@@ -16,8 +16,6 @@ android {
         versionName = "1.0"
         
         vectorDrawables.useSupportLibrary = true
-        
-        // 添加这行解决命名空间问题
         namespace = "com.fkdeepal.tools.ext"
     }
     
@@ -46,14 +44,16 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")  // 更新到最新版本
-    implementation("com.google.android.material:material:1.11.0")  // 更新到最新版本
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidsvg)
+    implementation(libs.timber)
     
-    // 添加 AndroidSVG 依赖
-    implementation("com.caverock:androidsvg:1.4")
-    
-    // Timber 日志
-    implementation("com.jakewharton.timber:timber:5.0.1")
+    // 其他依赖（根据你的需要添加）
+    implementation(libs.gson)
+    implementation(libs.preference)
+    implementation(libs.preference.ktx)
+    implementation(libs.liveEventBus)
 }
