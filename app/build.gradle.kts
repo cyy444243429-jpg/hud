@@ -1,4 +1,3 @@
-// app/build.gradle.kts
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,7 +5,6 @@ plugins {
 
 android {
     compileSdk = 34
-    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "com.fkdeepal.tools.ext"
@@ -37,10 +35,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
-    buildFeatures {
-        buildConfig = true
-    }
 }
 
 dependencies {
@@ -51,7 +45,7 @@ dependencies {
     implementation(libs.androidsvg)
     implementation(libs.timber)
     
-    // 其他依赖（根据你的需要添加）
+    // 其他依赖
     implementation(libs.gson)
     implementation(libs.preference)
     implementation(libs.preference.ktx)
