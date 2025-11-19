@@ -12,6 +12,15 @@ object SvgLoader {
     private val cache = mutableMapOf<String, PictureDrawable>()
     private val colorManager by lazy { ColorPreferenceManager.getInstance(AppUtils.appContext) }
     
+    // ========== 控制图像大小和位置的关键参数 ==========
+    // 调整这个值可以控制所有图标的缩放大小：值越大图标越大
+    private const val UNIFORM_SCALE = 0.004f
+    
+    // 调整这个值可以控制翻转图标的水平位置补偿：值越大翻转图标越靠右
+    private const val FLIP_OFFSET_X = 10
+    
+    // ========== 主要加载方法 ==========
+    
     /**
      * 从 res/raw 加载 SVG 文件
      */
@@ -26,7 +35,7 @@ object SvgLoader {
         return try {
             Timber.tag(TAG).d("开始加载 SVG: $resourceName")
             
-            // 从 res/raw 读取 SVG 文件（修改这里：drawable -> raw）
+            // 从 res/raw 读取 SVG 文件
             val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             if (resourceId == 0) {
                 Timber.tag(TAG).e("找不到资源: $resourceName")
@@ -111,13 +120,113 @@ object SvgLoader {
         return loadSvgFromResources(context, resourceName)
     }
     
+    // ========== 新增：标准化图标大小和位置的方法 ==========
+    
+    /**
+     * 加载标准化的车道图标 - 统一大小和位置
+     */
+    fun loadStandardizedLandIcon(
+        context: Context, 
+        iconNumber: String, 
+        targetWidth: Int = 60,  // 目标宽度
+        targetHeight: Int = 80  // 目标高度
+    ): PictureDrawable? {
+        val resourceName = "ic_land_$iconNumber"
+        val cacheKey = "${resourceName}_standard_${targetWidth}x${targetHeight}"
+        
+        cache[cacheKey]?.let {
+            Timber.tag(TAG).d("从缓存加载标准化 SVG: $cacheKey")
+            return it
+        }
+        
+        var inputStream: InputStream? = null
+        return try {
+            Timber.tag(TAG).d("开始加载标准化 SVG: $resourceName, 目标尺寸: ${targetWidth}x${targetHeight}")
+            
+            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
+            if (resourceId == 0) {
+                Timber.tag(TAG).e("找不到资源: $resourceName")
+                return null
+            }
+            
+            inputStream = context.resources.openRawResource(resourceId)
+            val svgContent = inputStream.bufferedReader().use { it.readText() }
+            
+            // 标准化SVG内容（统一transform）
+            val standardizedContent = standardizeSvgTransform(svgContent, targetWidth, targetHeight)
+            
+            // 替换颜色
+            val finalContent = replaceColorInContent(standardizedContent)
+            
+            val svg = SVG.getFromString(finalContent)
+            svg.setDocumentWidth(targetWidth.toFloat())
+            svg.setDocumentHeight(targetHeight.toFloat())
+            
+            val picture = svg.renderToPicture()
+            val drawable = PictureDrawable(picture)
+            
+            cache[cacheKey] = drawable
+            Timber.tag(TAG).d("成功加载标准化 SVG: $resourceName, 实际尺寸: ${picture.width}x${picture.height}")
+            drawable
+            
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "加载标准化 SVG 失败: $resourceName - ${e.message}")
+            null
+        } finally {
+            inputStream?.close()
+        }
+    }
+    
+    /**
+     * 标准化SVG的transform，智能处理翻转图标
+     * 关键参数：
+     * - UNIFORM_SCALE: 控制图标大小（值越大图标越大）
+     * - FLIP_OFFSET_X: 控制翻转图标的水平位置补偿
+     */
+    private fun standardizeSvgTransform(svgContent: String, targetWidth: Int, targetHeight: Int): String {
+        // 检测是否包含翻转transform
+        val hasFlip = svgContent.contains("scale(-1,1)") || svgContent.contains("scale\\(-1,1\\)")
+        Timber.tag(TAG).d("检测到翻转: $hasFlip")
+        
+        // 移除原有的所有transform
+        val transformPattern = """transform="[^"]*"""".toRegex()
+        
+        val centerX = targetWidth / 2
+        val centerY = targetHeight / 2
+        
+        // 根据是否翻转设置不同的transform
+        val standardTransform = if (hasFlip) {
+            // 翻转图标：先移动到中心，再翻转，再调整位置补偿
+            "transform=\"translate(${centerX + FLIP_OFFSET_X},$centerY) scale(-$UNIFORM_SCALE,-$UNIFORM_SCALE)\""
+        } else {
+            // 正常图标
+            "transform=\"translate($centerX,$centerY) scale($UNIFORM_SCALE,-$UNIFORM_SCALE)\""
+        }
+        
+        Timber.tag(TAG).d("应用标准化transform: $standardTransform")
+        return transformPattern.replace(svgContent, standardTransform)
+    }
+    
+    /**
+     * 替换颜色（不涉及transform）
+     */
+    private fun replaceColorInContent(svgContent: String): String {
+        val primaryColor = colorToHexString(colorManager.getLandPrimaryColor())
+        val secondaryColor = colorToHexString(colorManager.getLandSecondaryColor())
+        
+        return svgContent
+            .replace("@color/land_arrow_primary", primaryColor)
+            .replace("@color/land_arrow_secondary", secondaryColor)
+    }
+    
+    // ========== 原有其他方法保持不变 ==========
+    
     /**
      * 调试方法：检查SVG文件是否能正常加载
      */
     fun debugLoadLandIcon(context: Context, iconNumber: String): Boolean {
         val resourceName = "ic_land_$iconNumber"
         return try {
-            // 修改这里：drawable -> raw
             val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             if (resourceId == 0) {
                 Timber.tag(TAG).e("调试加载失败: 找不到资源 $resourceName")
@@ -147,7 +256,6 @@ object SvgLoader {
         Timber.tag(TAG).i("=== 诊断 raw SVG: $resourceName ===")
         
         try {
-            // 修改这里：drawable -> raw
             val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             Timber.tag(TAG).d("资源ID: $resourceId")
             
@@ -278,7 +386,6 @@ object SvgLoader {
      */
     private fun isSvgFileExists(context: Context, resourceName: String): Boolean {
         return try {
-            // 修改这里：drawable -> raw
             val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             resourceId != 0
         } catch (e: Exception) {
@@ -348,6 +455,23 @@ object SvgLoader {
         } catch (e: Exception) {
             Timber.tag(TAG).w("SVG 加载失败，使用降级处理: ic_land_$iconNumber")
             // 返回默认图标或 null
+            null
+        }
+    }
+    
+    /**
+     * 安全加载标准化 SVG，如果失败返回 null
+     */
+    fun safeLoadStandardizedLandIcon(
+        context: Context, 
+        iconNumber: String, 
+        targetWidth: Int = 60,
+        targetHeight: Int = 80
+    ): PictureDrawable? {
+        return try {
+            loadStandardizedLandIcon(context, iconNumber, targetWidth, targetHeight)
+        } catch (e: Exception) {
+            Timber.tag(TAG).w("标准化 SVG 加载失败，使用降级处理: ic_land_$iconNumber")
             null
         }
     }
