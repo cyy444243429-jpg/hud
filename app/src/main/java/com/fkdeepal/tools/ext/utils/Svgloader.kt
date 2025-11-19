@@ -10,6 +10,7 @@ import java.io.InputStream
 object SvgLoader {
     private const val TAG = "SvgLoader"
     private val cache = mutableMapOf<String, PictureDrawable>()
+    private val colorManager by lazy { ColorPreferenceManager.getInstance(AppUtils.appContext) }
     
     /**
      * 从 res/drawable 加载 SVG 文件
@@ -33,12 +34,14 @@ object SvgLoader {
             }
             
             inputStream = context.resources.openRawResource(resourceId)
-            val svg = SVG.getFromInputStream(inputStream)
             
-            // 只设置必要的属性，移除有问题的宽高比设置
+            // 替换颜色引用
+            val svgContent = replaceColorReferences(inputStream)
+            val svg = SVG.getFromString(svgContent)
+            
+            // 只设置必要的属性
             svg.setDocumentWidth("100%")
             svg.setDocumentHeight("100%")
-            // 移除有问题的行：svg.setDocumentPreserveAspectRatio(SVG.PreserveAspectRatio.STRETCH)
             
             // 渲染为 Picture
             val picture = svg.renderToPicture()
@@ -70,7 +73,31 @@ object SvgLoader {
         }
     }
     
-    // ... 其余方法保持不变
+    /**
+     * 替换 SVG 中的颜色引用
+     */
+    private fun replaceColorReferences(inputStream: InputStream): String {
+        val svgContent = inputStream.bufferedReader().use { it.readText() }
+        
+        // 获取当前颜色值
+        val primaryColor = colorToHexString(colorManager.getLandPrimaryColor())
+        val secondaryColor = colorToHexString(colorManager.getLandSecondaryColor())
+        
+        Timber.tag(TAG).d("替换颜色 - 主色: $primaryColor, 次色: $secondaryColor")
+        
+        // 替换颜色引用
+        return svgContent
+            .replace("@color/land_arrow_primary", primaryColor)
+            .replace("@color/land_arrow_secondary", secondaryColor)
+    }
+    
+    /**
+     * 将颜色值转换为 HEX 字符串
+     */
+    private fun colorToHexString(color: Int): String {
+        return String.format("#%06X", 0xFFFFFF and color)
+    }
+    
     /**
      * 加载车道图标 - 从 res/drawable 加载
      */
@@ -92,7 +119,8 @@ object SvgLoader {
             }
             
             val inputStream = context.resources.openRawResource(resourceId)
-            val svg = SVG.getFromInputStream(inputStream)
+            val svgContent = replaceColorReferences(inputStream)
+            val svg = SVG.getFromString(svgContent)
             inputStream.close()
             
             val picture = svg.renderToPicture()
@@ -103,6 +131,83 @@ object SvgLoader {
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "调试加载 SVG 失败: $resourceName - ${e.message}")
             false
+        }
+    }
+    
+    /**
+     * 诊断 SVG 加载问题
+     */
+    fun diagnoseSvgLoading(context: Context, resourceName: String) {
+        Timber.tag(TAG).i("=== 开始诊断 SVG: $resourceName ===")
+        
+        try {
+            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            Timber.tag(TAG).d("资源ID: $resourceId")
+            
+            if (resourceId == 0) {
+                Timber.tag(TAG).e("❌ 资源不存在: $resourceName")
+                return
+            }
+            
+            // 读取原始文件内容
+            val inputStream = context.resources.openRawResource(resourceId)
+            val rawContent = inputStream.bufferedReader().use { it.readText() }
+            inputStream.close()
+            
+            Timber.tag(TAG).d("📄 文件大小: ${rawContent.length} 字符")
+            Timber.tag(TAG).d("🔍 文件内容开头:\n${rawContent.take(200)}")
+            
+            // 检查关键特征
+            val isSvgFormat = rawContent.contains("<svg") && rawContent.contains("</svg>")
+            val hasPrimaryColor = rawContent.contains("@color/land_arrow_primary")
+            val hasSecondaryColor = rawContent.contains("@color/land_arrow_secondary")
+            
+            Timber.tag(TAG).d("📊 格式分析:")
+            Timber.tag(TAG).d("   - SVG格式: $isSvgFormat")
+            Timber.tag(TAG).d("   - 包含主色引用: $hasPrimaryColor")
+            Timber.tag(TAG).d("   - 包含次色引用: $hasSecondaryColor")
+            
+            // 尝试直接解析
+            Timber.tag(TAG).d("🧪 测试1: 直接解析原始内容")
+            try {
+                val svg = SVG.getFromString(rawContent)
+                val picture = svg.renderToPicture()
+                Timber.tag(TAG).d("   ✅ 直接解析成功 - 尺寸: ${picture.width}x${picture.height}")
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("   ❌ 直接解析失败: ${e.message}")
+            }
+            
+            // 尝试替换颜色后解析
+            Timber.tag(TAG).d("🧪 测试2: 替换颜色后解析")
+            try {
+                val replacedContent = rawContent
+                    .replace("@color/land_arrow_primary", "#808080")
+                    .replace("@color/land_arrow_secondary", "#FF0000")
+                val svg = SVG.getFromString(replacedContent)
+                val picture = svg.renderToPicture()
+                Timber.tag(TAG).d("   ✅ 替换颜色后解析成功 - 尺寸: ${picture.width}x${picture.height}")
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("   ❌ 替换颜色后解析失败: ${e.message}")
+            }
+            
+            // 尝试使用颜色管理器解析
+            Timber.tag(TAG).d("🧪 测试3: 使用颜色管理器解析")
+            try {
+                val inputStream2 = context.resources.openRawResource(resourceId)
+                val finalContent = replaceColorReferences(inputStream2)
+                inputStream2.close()
+                
+                val svg = SVG.getFromString(finalContent)
+                val picture = svg.renderToPicture()
+                Timber.tag(TAG).d("   ✅ 颜色管理器解析成功 - 尺寸: ${picture.width}x${picture.height}")
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("   ❌ 颜色管理器解析失败: ${e.message}")
+            }
+            
+            Timber.tag(TAG).i("=== 诊断完成: $resourceName ===")
+            
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "诊断失败: ${e.message}")
         }
     }
     
