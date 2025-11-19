@@ -53,9 +53,9 @@ class AppApplication : Application(){
                 Timber.e(it, "SVG调试失败")
             }
             
-            // 新增：SVG诊断 - 详细检查所有图标文件加载问题
+            // 新增：SVG诊断 - 详细检查 drawable-nodpi 中的文件
             runCatching {
-                Timber.d("=== 开始SVG全面诊断 ===")
+                Timber.d("=== 开始 drawable-nodpi SVG 诊断 ===")
                 
                 // 诊断所有 ic_land_0 到 ic_land_83
                 val allIcons = (0..83).map { it.toString() } + "89"
@@ -87,7 +87,7 @@ class AppApplication : Application(){
                     SvgLoader.diagnoseSvgLoading(this, resourceName)
                 }
                 
-                Timber.d("=== SVG全面诊断完成，共检查 ${allIcons.size} 个文件 ===")
+                Timber.d("=== drawable-nodpi SVG 诊断完成，共检查 ${allIcons.size} 个文件 ===")
                 
                 // 统计结果
                 val existingFiles = SvgLoader.checkSvgFilesExist(this)
