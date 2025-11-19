@@ -52,6 +52,50 @@ class AppApplication : Application(){
             }.onFailure {
                 Timber.e(it, "SVG调试失败")
             }
+            
+            // 新增：SVG诊断 - 详细检查所有图标文件加载问题
+            runCatching {
+                Timber.d("=== 开始SVG全面诊断 ===")
+                
+                // 诊断所有 ic_land_0 到 ic_land_83
+                val allIcons = (0..83).map { it.toString() } + "89"
+                
+                // 分组诊断，避免日志过多
+                val groups = allIcons.chunked(10) // 每10个一组
+                
+                groups.forEachIndexed { groupIndex, groupIcons ->
+                    Timber.d("--- 诊断组 ${groupIndex + 1}/${groups.size} (${groupIcons.size}个文件) ---")
+                    
+                    groupIcons.forEach { iconNumber ->
+                        val resourceName = "ic_land_$iconNumber"
+                        Timber.d("诊断: $resourceName")
+                        SvgLoader.diagnoseSvgLoading(this, resourceName)
+                    }
+                    
+                    // 每组之间稍微间隔，避免日志拥挤
+                    if (groupIndex < groups.size - 1) {
+                        Thread.sleep(100)
+                    }
+                }
+                
+                // 单独诊断几个关键文件，更详细
+                Timber.d("--- 关键文件详细诊断 ---")
+                val criticalIcons = listOf("0", "1", "13", "28", "38", "52", "66", "83", "89")
+                criticalIcons.forEach { iconNumber ->
+                    val resourceName = "ic_land_$iconNumber"
+                    Timber.d("=== 详细诊断: $resourceName ===")
+                    SvgLoader.diagnoseSvgLoading(this, resourceName)
+                }
+                
+                Timber.d("=== SVG全面诊断完成，共检查 ${allIcons.size} 个文件 ===")
+                
+                // 统计结果
+                val existingFiles = SvgLoader.checkSvgFilesExist(this)
+                Timber.d("📊 SVG文件统计: 存在 ${existingFiles.size} 个, 缺失 ${allIcons.size - existingFiles.size} 个")
+                
+            }.onFailure {
+                Timber.e(it, "SVG诊断失败")
+            }
         }
         Timber.plant(Timber.DebugTree())
         
