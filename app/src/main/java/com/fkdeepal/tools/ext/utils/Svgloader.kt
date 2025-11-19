@@ -13,7 +13,7 @@ object SvgLoader {
     private val colorManager by lazy { ColorPreferenceManager.getInstance(AppUtils.appContext) }
     
     /**
-     * 从 res/drawable-nodpi 加载 SVG 文件
+     * 从 res/raw 加载 SVG 文件
      */
     fun loadSvgFromResources(context: Context, resourceName: String): PictureDrawable? {
         // 检查缓存
@@ -26,8 +26,8 @@ object SvgLoader {
         return try {
             Timber.tag(TAG).d("开始加载 SVG: $resourceName")
             
-            // 从 res/drawable-nodpi 读取 SVG 文件
-            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            // 从 res/raw 读取 SVG 文件（修改这里：drawable -> raw）
+            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             if (resourceId == 0) {
                 Timber.tag(TAG).e("找不到资源: $resourceName")
                 return null
@@ -104,7 +104,7 @@ object SvgLoader {
     }
     
     /**
-     * 加载车道图标 - 从 res/drawable-nodpi 加载
+     * 加载车道图标 - 从 res/raw 加载
      */
     fun loadLandIcon(context: Context, iconNumber: String): PictureDrawable? {
         val resourceName = "ic_land_$iconNumber"
@@ -117,7 +117,8 @@ object SvgLoader {
     fun debugLoadLandIcon(context: Context, iconNumber: String): Boolean {
         val resourceName = "ic_land_$iconNumber"
         return try {
-            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            // 修改这里：drawable -> raw
+            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             if (resourceId == 0) {
                 Timber.tag(TAG).e("调试加载失败: 找不到资源 $resourceName")
                 return false
@@ -140,13 +141,14 @@ object SvgLoader {
     }
     
     /**
-     * 诊断 drawable-nodpi 中的 SVG 文件
+     * 诊断 raw 中的 SVG 文件
      */
     fun diagnoseSvgLoading(context: Context, resourceName: String) {
-        Timber.tag(TAG).i("=== 诊断 drawable-nodpi SVG: $resourceName ===")
+        Timber.tag(TAG).i("=== 诊断 raw SVG: $resourceName ===")
         
         try {
-            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            // 修改这里：drawable -> raw
+            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             Timber.tag(TAG).d("资源ID: $resourceId")
             
             if (resourceId == 0) {
@@ -276,7 +278,8 @@ object SvgLoader {
      */
     private fun isSvgFileExists(context: Context, resourceName: String): Boolean {
         return try {
-            val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
+            // 修改这里：drawable -> raw
+            val resourceId = context.resources.getIdentifier(resourceName, "raw", context.packageName)
             resourceId != 0
         } catch (e: Exception) {
             false
