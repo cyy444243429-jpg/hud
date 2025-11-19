@@ -13,7 +13,7 @@ object SvgLoader {
     private val colorManager by lazy { ColorPreferenceManager.getInstance(AppUtils.appContext) }
     
     /**
-     * 从 res/drawable 加载 SVG 文件
+     * 从 res/drawable-nodpi 加载 SVG 文件
      */
     fun loadSvgFromResources(context: Context, resourceName: String): PictureDrawable? {
         // 检查缓存
@@ -26,7 +26,7 @@ object SvgLoader {
         return try {
             Timber.tag(TAG).d("开始加载 SVG: $resourceName")
             
-            // 从 res/drawable 读取 SVG 文件
+            // 从 res/drawable-nodpi 读取 SVG 文件
             val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
             if (resourceId == 0) {
                 Timber.tag(TAG).e("找不到资源: $resourceName")
@@ -35,18 +35,24 @@ object SvgLoader {
             
             inputStream = context.resources.openRawResource(resourceId)
             
-            // 替换颜色引用
+            // 添加调试：检查实际读取的内容
+            val rawContent = inputStream.bufferedReader().use { it.readText() }
+            Timber.tag(TAG).d("实际读取的文件内容大小: ${rawContent.length} 字符")
+            Timber.tag(TAG).d("文件开头: ${rawContent.take(100)}")
+            
+            // 重新创建输入流进行解析
+            inputStream.close()
+            inputStream = context.resources.openRawResource(resourceId)
+            
             val svgContent = replaceColorReferences(inputStream)
             val svg = SVG.getFromString(svgContent)
             
-            // 只设置必要的属性
+            // 渲染设置
             svg.setDocumentWidth("100%")
             svg.setDocumentHeight("100%")
             
-            // 渲染为 Picture
             val picture = svg.renderToPicture()
             
-            // 检查渲染结果
             if (picture.width <= 0 || picture.height <= 0) {
                 Timber.tag(TAG).w("SVG 渲染尺寸异常: ${picture.width}x${picture.height}")
                 return null
@@ -64,7 +70,6 @@ object SvgLoader {
             Timber.tag(TAG).e(e, "加载 SVG 失败: $resourceName - ${e.message}")
             null
         } finally {
-            // 确保流被关闭
             try {
                 inputStream?.close()
             } catch (e: Exception) {
@@ -99,7 +104,7 @@ object SvgLoader {
     }
     
     /**
-     * 加载车道图标 - 从 res/drawable 加载
+     * 加载车道图标 - 从 res/drawable-nodpi 加载
      */
     fun loadLandIcon(context: Context, iconNumber: String): PictureDrawable? {
         val resourceName = "ic_land_$iconNumber"
@@ -135,10 +140,10 @@ object SvgLoader {
     }
     
     /**
-     * 诊断 SVG 加载问题
+     * 诊断 drawable-nodpi 中的 SVG 文件
      */
     fun diagnoseSvgLoading(context: Context, resourceName: String) {
-        Timber.tag(TAG).i("=== 开始诊断 SVG: $resourceName ===")
+        Timber.tag(TAG).i("=== 诊断 drawable-nodpi SVG: $resourceName ===")
         
         try {
             val resourceId = context.resources.getIdentifier(resourceName, "drawable", context.packageName)
@@ -158,14 +163,24 @@ object SvgLoader {
             Timber.tag(TAG).d("🔍 文件内容开头:\n${rawContent.take(200)}")
             
             // 检查关键特征
+            val hasXmlDeclaration = rawContent.startsWith("<?xml")
             val isSvgFormat = rawContent.contains("<svg") && rawContent.contains("</svg>")
             val hasPrimaryColor = rawContent.contains("@color/land_arrow_primary")
             val hasSecondaryColor = rawContent.contains("@color/land_arrow_secondary")
             
             Timber.tag(TAG).d("📊 格式分析:")
+            Timber.tag(TAG).d("   - XML声明: $hasXmlDeclaration")
             Timber.tag(TAG).d("   - SVG格式: $isSvgFormat")
             Timber.tag(TAG).d("   - 包含主色引用: $hasPrimaryColor")
             Timber.tag(TAG).d("   - 包含次色引用: $hasSecondaryColor")
+            
+            // 检查是否有二进制字符
+            val binaryChars = rawContent.take(1000).count { it.code < 32 && it !in listOf('\t', '\n', '\r') }
+            Timber.tag(TAG).d("🔧 二进制字符数量: $binaryChars")
+            
+            if (binaryChars > 10) {
+                Timber.tag(TAG).e("❌ 文件可能被损坏，包含过多二进制字符")
+            }
             
             // 尝试直接解析
             Timber.tag(TAG).d("🧪 测试1: 直接解析原始内容")
@@ -202,6 +217,18 @@ object SvgLoader {
                 Timber.tag(TAG).d("   ✅ 颜色管理器解析成功 - 尺寸: ${picture.width}x${picture.height}")
             } catch (e: Exception) {
                 Timber.tag(TAG).e("   ❌ 颜色管理器解析失败: ${e.message}")
+            }
+            
+            // 尝试修复常见问题
+            Timber.tag(TAG).d("🧪 测试4: 尝试修复解析")
+            try {
+                // 移除可能的 BOM 字符
+                val cleanedContent = rawContent.trim().removePrefix("\uFEFF")
+                val svg = SVG.getFromString(cleanedContent)
+                val picture = svg.renderToPicture()
+                Timber.tag(TAG).d("   ✅ 修复后解析成功 - 尺寸: ${picture.width}x${picture.height}")
+            } catch (e: Exception) {
+                Timber.tag(TAG).e("   ❌ 修复后解析失败: ${e.message}")
             }
             
             Timber.tag(TAG).i("=== 诊断完成: $resourceName ===")
@@ -307,5 +334,18 @@ object SvgLoader {
      */
     fun getCacheStats(): String {
         return "SVG 缓存: ${cache.size} 个文件"
+    }
+    
+    /**
+     * 安全加载 SVG，如果失败返回 null
+     */
+    fun safeLoadLandIcon(context: Context, iconNumber: String): PictureDrawable? {
+        return try {
+            loadLandIcon(context, iconNumber)
+        } catch (e: Exception) {
+            Timber.tag(TAG).w("SVG 加载失败，使用降级处理: ic_land_$iconNumber")
+            // 返回默认图标或 null
+            null
+        }
     }
 }
