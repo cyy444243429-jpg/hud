@@ -19,6 +19,7 @@ import com.fkdeepal.tools.ext.LandColorSettingActivity
 import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
 import com.fkdeepal.tools.ext.ui.video.VideoPresentation
 import com.fkdeepal.tools.ext.utils.AppUtils
+import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -32,12 +33,6 @@ class SettingActivity: AppCompatActivity() {
             val intent = Intent(activity, SettingActivity::class.java)
             activity.startActivity(intent)
         }
-        
-        // 图标大小相关常量
-        const val KEY_LAND_ICON_SIZE = "key_land_icon_size"
-        const val DEFAULT_LAND_ICON_SIZE = 40
-        const val MIN_LAND_ICON_SIZE = 30
-        const val MAX_LAND_ICON_SIZE = 60
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -165,6 +160,47 @@ class SettingActivity: AppCompatActivity() {
                     startActivity(Intent(requireContext(), LandColorSettingActivity::class.java))
                     true
                 }
+            }
+            
+            // ========== 新增：图标大小滑块监听 ==========
+            findPreference<androidx.preference.SeekBarPreference>("key_land_icon_size")?.let { seekBarPref ->
+                Timber.tag(TAG).d("初始化图标大小滑块")
+                
+                // 设置当前值显示
+                val currentSize = PreferenceUtils.getLandIconSize(requireContext())
+                seekBarPref.summary = "当前尺寸: ${currentSize}px"
+                
+                seekBarPref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
+                    if (newValue is Int) {
+                        Timber.tag(TAG).i("车道图标大小变更: ${newValue}px")
+                        
+                        // 保存新的大小
+                        PreferenceUtils.setLandIconSize(requireContext(), newValue)
+                        
+                        // 更新摘要显示
+                        seekBarPref.summary = "当前尺寸: ${newValue}px"
+                        
+                        // 发送广播通知HUD界面更新图标尺寸
+                        sendIconSizeChangedBroadcast(newValue)
+                    }
+                    true
+                }
+            }
+        }
+        
+        /**
+         * 新增：发送图标大小变更广播
+         */
+        private fun sendIconSizeChangedBroadcast(newSize: Int) {
+            Timber.tag(TAG).d("发送图标大小变更广播: ${newSize}px")
+            try {
+                // 这里可以发送广播通知HUD界面刷新
+                // 或者通过其他方式通知适配器刷新
+                val intent = Intent("ACTION_LAND_ICON_SIZE_CHANGED")
+                intent.putExtra("icon_size", newSize)
+                requireContext().sendBroadcast(intent)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "发送图标大小变更广播失败")
             }
         }
         
