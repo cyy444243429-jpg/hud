@@ -13,7 +13,7 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDriverWay"
         android:layout_width="match_parent"
-        android:layout_height="40px"
+        android:layout_height="55px"
         android:orientation="horizontal"
         tools:itemCount="4"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
