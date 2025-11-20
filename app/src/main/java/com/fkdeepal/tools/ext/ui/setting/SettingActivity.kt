@@ -32,6 +32,12 @@ class SettingActivity: AppCompatActivity() {
             val intent = Intent(activity, SettingActivity::class.java)
             activity.startActivity(intent)
         }
+        
+        // 图标大小相关常量
+        const val KEY_LAND_ICON_SIZE = "key_land_icon_size"
+        const val DEFAULT_LAND_ICON_SIZE = 40
+        const val MIN_LAND_ICON_SIZE = 30
+        const val MAX_LAND_ICON_SIZE = 60
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {
