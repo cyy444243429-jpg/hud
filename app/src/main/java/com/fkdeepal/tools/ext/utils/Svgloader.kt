@@ -14,7 +14,7 @@ object SvgLoader {
     
     // ========== 控制图像大小和位置的关键参数 ==========
     // 调整这个值可以控制所有图标的缩放大小：值越大图标越大
-    private const val UNIFORM_SCALE = 0.01f
+    private const val UNIFORM_SCALE = 0.05f
     
     // 调整这个值可以控制翻转图标的水平位置补偿：值越大翻转图标越靠右
     private const val FLIP_OFFSET_X = 10
