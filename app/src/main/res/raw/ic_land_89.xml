@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="55" viewBox="0 0 40 55">
+  <line x1="20" y1="12" x2="20" y2="27" stroke="@color/land_arrow_primary" stroke-width="1" stroke-linecap="round"/>
+  <line x1="28" y1="12" x2="28" y2="27" stroke="@color/land_arrow_primary" stroke-width="1" stroke-linecap="round"/>
+  <!-- 十六进制Unicode实体（100%准确对应"未、划、线"） -->
+  <text x="24" y="14" font-size="6" text-anchor="middle" dominant-baseline="middle" fill="@color/land_arrow_primary">&#x672A;</text> <!-- 未 -->
+  <text x="24" y="20" font-size="6" text-anchor="middle" dominant-baseline="middle" fill="@color/land_arrow_primary">&#x5212;</text> <!-- 划 -->
+  <text x="24" y="26" font-size="6" text-anchor="middle" dominant-baseline="middle" fill="@color/land_arrow_primary">&#x7EBF;</text> <!-- 线 -->
+</svg>
