@@ -4,8 +4,12 @@ import android.app.Activity
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.Display
 import android.view.MenuItem
+import android.widget.SeekBar
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.preference.ListPreference
@@ -27,11 +31,18 @@ import java.util.Locale
 class SettingActivity: AppCompatActivity() {
     companion object{
         private const val TAG = "SettingActivity"
+        // 添加静态变量来保存适配器引用
+        var hudAdapter: HudAmapDriveWayAdapter? = null
 
         fun startActivity(activity: Activity) {
             Timber.tag(TAG).d("启动设置Activity")
             val intent = Intent(activity, SettingActivity::class.java)
             activity.startActivity(intent)
+        }
+        
+        // 设置适配器的方法
+        fun setHudAdapter(adapter: HudAmapDriveWayAdapter) {
+            hudAdapter = adapter
         }
     }
     
@@ -162,46 +173,73 @@ class SettingActivity: AppCompatActivity() {
                 }
             }
             
-            // ========== 新增：图标大小滑块监听 ==========
-            findPreference<androidx.preference.SeekBarPreference>("key_land_icon_size")?.let { seekBarPref ->
-                Timber.tag(TAG).d("初始化图标大小滑块")
+            // 新增：图标大小设置点击事件
+            findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
+                Timber.tag(TAG).d("初始化图标大小设置选项")
                 
                 // 设置当前值显示
                 val currentSize = PreferenceUtils.getLandIconSize(requireContext())
-                seekBarPref.summary = "当前尺寸: ${currentSize}px"
+                pref.summary = "当前尺寸: ${currentSize}px (30-80)"
                 
-                seekBarPref.onPreferenceChangeListener = Preference.OnPreferenceChangeListener { preference, newValue ->
-                    if (newValue is Int) {
-                        Timber.tag(TAG).i("车道图标大小变更: ${newValue}px")
-                        
-                        // 保存新的大小
-                        PreferenceUtils.setLandIconSize(requireContext(), newValue)
-                        
-                        // 更新摘要显示
-                        seekBarPref.summary = "当前尺寸: ${newValue}px"
-                        
-                        // 发送广播通知HUD界面更新图标尺寸
-                        sendIconSizeChangedBroadcast(newValue)
-                    }
+                pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
+                    Timber.tag(TAG).i("点击图标大小设置")
+                    showIconSizeDialog()
                     true
                 }
             }
         }
         
         /**
-         * 新增：发送图标大小变更广播
+         * 显示图标大小设置对话框
          */
-        private fun sendIconSizeChangedBroadcast(newSize: Int) {
-            Timber.tag(TAG).d("发送图标大小变更广播: ${newSize}px")
-            try {
-                // 这里可以发送广播通知HUD界面刷新
-                // 或者通过其他方式通知适配器刷新
-                val intent = Intent("ACTION_LAND_ICON_SIZE_CHANGED")
-                intent.putExtra("icon_size", newSize)
-                requireContext().sendBroadcast(intent)
-            } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "发送图标大小变更广播失败")
-            }
+        private fun showIconSizeDialog() {
+            val currentSize = PreferenceUtils.getLandIconSize(requireContext())
+            
+            val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_icon_size, null)
+            val seekBar = dialogView.findViewById<SeekBar>(R.id.seekBar_icon_size)
+            val textValue = dialogView.findViewById<TextView>(R.id.text_size_value)
+            
+            // 设置 SeekBar 范围
+            seekBar.min = 30
+            seekBar.max = 80
+            seekBar.progress = currentSize
+            textValue.text = "${currentSize}px"
+            
+            seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                    textValue.text = "${progress}px"
+                }
+                
+                override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    Timber.tag(TAG).d("开始调整图标大小")
+                }
+                
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    val newSize = seekBar.progress
+                    Timber.tag(TAG).i("图标大小调整完成: ${newSize}px")
+                    
+                    // 保存新的大小
+                    PreferenceUtils.setLandIconSize(requireContext(), newSize)
+                    
+                    // 更新摘要
+                    findPreference<Preference>("key_land_icon_size_pref")?.summary = "当前尺寸: ${newSize}px (30-80)"
+                    
+                    // 刷新适配器
+                    SettingActivity.hudAdapter?.refreshIconSizes()
+                }
+            })
+            
+            AlertDialog.Builder(requireContext())
+                .setTitle("车道图标大小")
+                .setView(dialogView)
+                .setPositiveButton("确定") { dialog, _ -> 
+                    Timber.tag(TAG).d("图标大小设置对话框确认")
+                    dialog.dismiss() 
+                }
+                .setOnDismissListener {
+                    Timber.tag(TAG).d("图标大小设置对话框关闭")
+                }
+                .show()
         }
         
         override fun onResume() {
