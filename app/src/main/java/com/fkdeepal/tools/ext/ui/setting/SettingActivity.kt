@@ -31,8 +31,8 @@ import java.util.Locale
 class SettingActivity: AppCompatActivity() {
     companion object{
         private const val TAG = "SettingActivity"
-        // 修改：使用 Any 类型避免编译错误
-        var hudAdapter: Any? = null
+        // 修改：移除属性，只使用方法
+        private var _hudAdapter: Any? = null
 
         fun startActivity(activity: Activity) {
             Timber.tag(TAG).d("启动设置Activity")
@@ -40,9 +40,14 @@ class SettingActivity: AppCompatActivity() {
             activity.startActivity(intent)
         }
         
-        // 修改：使用 Any 类型参数
+        // 修改：统一使用静态方法管理适配器
         fun setHudAdapter(adapter: Any?) {
-            hudAdapter = adapter
+            _hudAdapter = adapter
+            Timber.tag(TAG).d("设置HUD适配器引用")
+        }
+        
+        fun getHudAdapter(): Any? {
+            return _hudAdapter
         }
     }
     
@@ -247,7 +252,7 @@ class SettingActivity: AppCompatActivity() {
          */
         private fun refreshHudAdapter(newSize: Int) {
             try {
-                val adapter = SettingActivity.hudAdapter
+                val adapter = SettingActivity.getHudAdapter()
                 if (adapter != null) {
                     // 使用反射调用 refreshIconSizes 方法
                     val method = adapter.javaClass.getMethod("refreshIconSizes")
