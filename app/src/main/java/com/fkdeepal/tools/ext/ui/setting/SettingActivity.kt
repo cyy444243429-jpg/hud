@@ -31,8 +31,8 @@ import java.util.Locale
 class SettingActivity: AppCompatActivity() {
     companion object{
         private const val TAG = "SettingActivity"
-        // 添加静态变量来保存适配器引用
-        var hudAdapter: HudAmapDriveWayAdapter? = null
+        // 修改：使用 Any 类型避免编译错误
+        var hudAdapter: Any? = null
 
         fun startActivity(activity: Activity) {
             Timber.tag(TAG).d("启动设置Activity")
@@ -40,8 +40,8 @@ class SettingActivity: AppCompatActivity() {
             activity.startActivity(intent)
         }
         
-        // 设置适配器的方法
-        fun setHudAdapter(adapter: HudAmapDriveWayAdapter) {
+        // 修改：使用 Any 类型参数
+        fun setHudAdapter(adapter: Any?) {
             hudAdapter = adapter
         }
     }
@@ -224,8 +224,8 @@ class SettingActivity: AppCompatActivity() {
                     // 更新摘要
                     findPreference<Preference>("key_land_icon_size_pref")?.summary = "当前尺寸: ${newSize}px (30-80)"
                     
-                    // 刷新适配器
-                    SettingActivity.hudAdapter?.refreshIconSizes()
+                    // 修改：使用反射调用刷新方法，避免编译错误
+                    refreshHudAdapter(newSize)
                 }
             })
             
@@ -240,6 +240,25 @@ class SettingActivity: AppCompatActivity() {
                     Timber.tag(TAG).d("图标大小设置对话框关闭")
                 }
                 .show()
+        }
+        
+        /**
+         * 新增：使用反射安全地调用适配器刷新方法
+         */
+        private fun refreshHudAdapter(newSize: Int) {
+            try {
+                val adapter = SettingActivity.hudAdapter
+                if (adapter != null) {
+                    // 使用反射调用 refreshIconSizes 方法
+                    val method = adapter.javaClass.getMethod("refreshIconSizes")
+                    method.invoke(adapter)
+                    Timber.tag(TAG).d("成功调用适配器刷新方法，新尺寸: ${newSize}px")
+                } else {
+                    Timber.tag(TAG).w("适配器为null，无法刷新图标尺寸")
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "调用适配器刷新方法失败")
+            }
         }
         
         override fun onResume() {
