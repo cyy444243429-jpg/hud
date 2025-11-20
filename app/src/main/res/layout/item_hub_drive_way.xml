@@ -6,15 +6,6 @@
     android:layout_width="29px"
     android:layout_height="40px">
     
-    <!-- 移除 app:srcCompat 属性，避免在XML中直接引用SVG -->
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/ivIcon"
-        android:layout_width="29px"
-        android:layout_height="40px"
-        android:scaleType="centerInside"
-        android:adjustViewBounds="true"
-        tools:src="@drawable/ic_land_66" />
-
     <TextView
         android:id="@+id/tvValue"
         android:layout_width="wrap_content"
