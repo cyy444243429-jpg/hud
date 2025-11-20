@@ -23,6 +23,7 @@ import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideEndEvent
 import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideEvent
 import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideInfoEvent
 import com.fkdeepal.tools.ext.receiver.AmapNaviGuideReceiver
+import com.fkdeepal.tools.ext.ui.setting.SettingActivity
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
 import java.text.DecimalFormat
@@ -229,6 +230,10 @@ object AmapFloatManager {
             y = 60
         }
         mAmapDriveWayInfoAdapter = HudAmapDriveWayAdapter(mAmapDriveWayInfoData)
+        
+        // ========== 新增：设置适配器引用 ==========
+        SettingActivity.setHudAdapter(mAmapDriveWayInfoAdapter)
+        
         mHudFloatNaviInfoBinding?.rvDriverWay?.adapter = mAmapDriveWayInfoAdapter
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
