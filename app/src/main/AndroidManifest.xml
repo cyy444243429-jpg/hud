@@ -16,7 +16,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.App" >
+        android:theme="@style/Theme.App">
+
         <activity
             android:name=".ui.HomeActivity"
             android:alwaysRetainTaskState="true"
@@ -24,49 +25,50 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="landscape"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustPan" >
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.test.TestActivity"
+
+        <activity
+            android:name=".ui.test.TestActivity"
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
             android:label="测试页面"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
-            />
-        <activity android:name=".ui.HudDisplayActivity"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
+
+        <activity
+            android:name=".ui.HudDisplayActivity"
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
             android:label="测试页面"
             android:theme="@style/Theme.App.NoActionBar"
-            android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
-            />
-<activity
-    android:name=".LandColorSettingActivity"
-    android:exported="false"
-    android:screenOrientation="landscape"
-    android:theme="@style/Theme.App.NoActionBar" />
-    <receiver
-            android:name=".receiver.BootReceiver"
-           android:enabled="true"
-           android:exported="true">
-           <intent-filter>
-               <action
-                   android:name="android.intent.action.BOOT_COMPLETED" />
-               <action
-                   android:name="android.intent.action.QUICKBOOT_POWERON" />
-               <category
-                   android:name="android.intent.category.LAUNCHER" />
+            android:windowSoftInputMode="stateAlwaysHidden|adjustPan" />
 
-           </intent-filter>
-        </receiver
+        <activity
+            android:name=".LandColorSettingActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="车道颜色设置"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -77,6 +79,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths" />
         </provider>
+
         <activity
             android:name=".ui.log.LogFileListActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -84,6 +87,7 @@
             android:label="Log"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+
         <activity
             android:name=".ui.log.LogDetailActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -91,6 +95,7 @@
             android:label="Log"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+
         <activity
             android:name=".ui.video.HudVideoActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -98,6 +103,7 @@
             android:label="视频投屏播放"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+
         <activity
             android:name=".ui.setting.SettingActivity"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
@@ -105,5 +111,6 @@
             android:label="设置"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
+
     </application>
 </manifest>
