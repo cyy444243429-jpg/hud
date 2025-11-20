@@ -103,7 +103,4 @@
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
             android:exported="false"
             android:label="设置"
-            android:screenOrientation="landscape"
-            android:windowSoftInputMode="adjustUnspecified|stateHidden|adjustPan|stateAlwaysHidden" />
-    </application>
-</manifest>
+            android:screenOrientation="land
