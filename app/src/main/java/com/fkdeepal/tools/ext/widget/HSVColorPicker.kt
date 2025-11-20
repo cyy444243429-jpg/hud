@@ -44,7 +44,9 @@ class HSVColorPicker @JvmOverloads constructor(
         canvas.drawRoundRect(0f, 0f, width.toFloat(), height.toFloat(), 20f, 20f, paint)
         
         // 绘制当前选择指示器
-        val position = hueToPosition(Color.colorToHSV(currentColor, floatArrayOf(0f, 0f, 0f))[0])
+        val hsvArray = floatArrayOf(0f, 0f, 0f)
+        Color.colorToHSV(currentColor, hsvArray)
+        val position = hueToPosition(hsvArray[0])
         val centerY = height / 2f
         
         // 外圈
