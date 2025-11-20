@@ -7,7 +7,8 @@
     <color name="white_70">#B3FFFFFF</color>
     <color name="black">#000000</color>
     <color name="red">#F43636</color>
-
+    <color name="land_arrow_primary">#FFFFFF</color>
+    <color name="land_arrow_secondary">#FF0000</color>
     <color name="text_primary">#111111</color>
     <color name="text_secondary">#555555</color>
     <color name="text_thirdly">#777777</color>
