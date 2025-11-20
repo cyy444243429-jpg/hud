@@ -22,4 +22,3 @@
         android:textColor="@color/white"
         android:visibility="gone"/>
 </RelativeLayout>
-</RelativeLayout>
