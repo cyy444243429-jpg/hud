@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
 import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
@@ -28,6 +29,9 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     
     companion object {
         private const val TAG = "HudAmapDriveWayAdapter"
+        // 新的图标尺寸常量
+        private const val ICON_WIDTH = 40
+        private const val ICON_HEIGHT = 55
     }
 
     override fun onCreateViewBinding(layoutInflater: LayoutInflater,
@@ -51,23 +55,48 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             val iconNumber = resourceName.removePrefix("ic_land_")
             Timber.tag(TAG).d("加载车道图标, 资源名: $resourceName, 编号: $iconNumber")
             
-            val drawable = SvgLoader.loadLandIcon(mContext, iconNumber)
-            if (drawable != null) {
-                // 在主线程安全设置图片
-                viewBinding.root.post {
-                    runCatching {
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName")
-                        logMemoryStatus("车道图标加载完成: $resourceName")
-                    }.onFailure { e ->
-                        Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
-                        // 加载失败时设置透明背景
+            // 从 raw 资源加载 SVG
+            val resourceId = mResources.getIdentifier(resourceName, "raw", mPackageName)
+            if (resourceId != 0) {
+                val drawable = VectorDrawableCompat.create(mResources, resourceId, null)
+                if (drawable != null) {
+                    // 关键：设置正确的固有尺寸
+                    drawable.setBounds(0, 0, ICON_WIDTH, ICON_HEIGHT)
+                    
+                    // 在主线程安全设置图片
+                    viewBinding.root.post {
+                        runCatching {
+                            viewBinding.ivIcon.setImageDrawable(drawable)
+                            
+                            // 确保 ImageView 尺寸正确
+                            val layoutParams = viewBinding.ivIcon.layoutParams
+                            layoutParams.width = ICON_WIDTH
+                            layoutParams.height = ICON_HEIGHT
+                            viewBinding.ivIcon.layoutParams = layoutParams
+                            
+                            Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${ICON_WIDTH}x${ICON_HEIGHT}")
+                            logMemoryStatus("车道图标加载完成: $resourceName")
+                            
+                            // 调试当前尺寸
+                            viewBinding.ivIcon.post {
+                                Timber.tag(TAG).d("ImageView实际尺寸: ${viewBinding.ivIcon.width}x${viewBinding.ivIcon.height}")
+                            }
+                        }.onFailure { e ->
+                            Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
+                            // 加载失败时设置透明背景
+                            viewBinding.ivIcon.setImageDrawable(null)
+                            fail.invoke()
+                        }
+                    }
+                } else {
+                    Timber.tag(TAG).w("车道图标加载为null: $resourceName")
+                    viewBinding.root.post {
                         viewBinding.ivIcon.setImageDrawable(null)
                         fail.invoke()
                     }
                 }
             } else {
-                Timber.tag(TAG).w("车道图标加载为null: $resourceName")
+                Timber.tag(TAG).w("未找到raw资源: $resourceName")
                 viewBinding.root.post {
                     viewBinding.ivIcon.setImageDrawable(null)
                     fail.invoke()
@@ -102,13 +131,28 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             if (icon.isNullOrBlank()) {
                 // 使用安全的默认资源加载
                 runCatching {
-                    val drawable = SvgLoader.loadLandIcon(mContext, "89")
-                    if (drawable != null) {
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position")
+                    // 从 raw 加载默认图标 ic_land_89
+                    val defaultResourceId = mResources.getIdentifier("ic_land_89", "raw", mPackageName)
+                    if (defaultResourceId != 0) {
+                        val drawable = VectorDrawableCompat.create(mResources, defaultResourceId, null)
+                        if (drawable != null) {
+                            drawable.setBounds(0, 0, ICON_WIDTH, ICON_HEIGHT)
+                            viewBinding.ivIcon.setImageDrawable(drawable)
+                            
+                            // 确保 ImageView 尺寸正确
+                            val layoutParams = viewBinding.ivIcon.layoutParams
+                            layoutParams.width = ICON_WIDTH
+                            layoutParams.height = ICON_HEIGHT
+                            viewBinding.ivIcon.layoutParams = layoutParams
+                            
+                            Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position")
+                        } else {
+                            viewBinding.ivIcon.setImageDrawable(null)
+                            Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
+                        }
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
-                        Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
+                        Timber.tag(TAG).w("未找到默认raw资源: ic_land_89")
                     }
                     logMemoryStatus("默认 SVG 图标设置完成 - 位置: $position")
                 }.onFailure {
@@ -157,13 +201,13 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
      */
     fun clearAdapterCache() {
         Timber.tag(TAG).d("清理适配器缓存")
-        SvgLoader.clearCache()
+        // 如果有缓存清理逻辑，可以在这里添加
     }
     
     /**
      * 获取缓存统计信息
      */
     fun getCacheStatistics(): String {
-        return SvgLoader.getCacheStats()
+        return "当前使用 raw 资源加载，无缓存"
     }
 }
