@@ -15,6 +15,16 @@
             android:key="key_land_color_setting"
             android:title="车道图标颜色设置"
             android:summary="设置主颜色（灰色箭头）和次颜色（红色箭头）的RGB值" />
+        
+        <!-- 新增：图标大小控制滑块 -->
+        <SeekBarPreference
+            android:key="key_land_icon_size"
+            android:title="车道图标大小"
+            android:summary="调整车道图标的显示尺寸"
+            android:defaultValue="55"
+            app:min="30"
+            app:max="80"
+            app:showSeekBarValue="true" />
     </PreferenceCategory>
     <PreferenceCategory android:title="其他" >
         <!--单选-->
