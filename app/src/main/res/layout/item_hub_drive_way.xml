@@ -11,7 +11,8 @@
         android:layout_width="40px"
         android:layout_height="55px"
         android:scaleType="centerInside"
-        android:adjustViewBounds="true" />
+        android:adjustViewBounds="true"
+        tools:src="@drawable/ic_land_66" />  <!-- 这个保持不动，只是预览用 -->
 
     <TextView
         android:id="@+id/tvValue"
@@ -20,4 +21,5 @@
         android:textSize="20px"
         android:textColor="@color/white"
         android:visibility="gone"/>
+</RelativeLayout>
 </RelativeLayout>
