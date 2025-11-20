@@ -11,6 +11,7 @@ import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.ItemHubDriveWayBinding
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.SvgLoader
+import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import timber.log.Timber
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -57,8 +58,19 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 viewBinding.root.post {
                     runCatching {
                         viewBinding.ivIcon.setImageDrawable(drawable)
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName")
+                        
+                        // ========== 新增：动态设置图标尺寸 ==========
+                        val iconHeight = PreferenceUtils.getLandIconSize(mContext)
+                        val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
+                        
+                        val layoutParams = viewBinding.ivIcon.layoutParams
+                        layoutParams.width = iconWidth
+                        layoutParams.height = iconHeight
+                        viewBinding.ivIcon.layoutParams = layoutParams
+                        
+                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
                         logMemoryStatus("车道图标加载完成: $resourceName")
+                        
                     }.onFailure { e ->
                         Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
                         // 加载失败时设置透明背景
@@ -105,7 +117,17 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                     val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
                         viewBinding.ivIcon.setImageDrawable(drawable)
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position")
+                        
+                        // ========== 新增：动态设置默认图标尺寸 ==========
+                        val iconHeight = PreferenceUtils.getLandIconSize(mContext)
+                        val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
+                        
+                        val layoutParams = viewBinding.ivIcon.layoutParams
+                        layoutParams.width = iconWidth
+                        layoutParams.height = iconHeight
+                        viewBinding.ivIcon.layoutParams = layoutParams
+                        
+                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
                         Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
@@ -165,5 +187,13 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
      */
     fun getCacheStatistics(): String {
         return SvgLoader.getCacheStats()
+    }
+    
+    /**
+     * 新增：刷新所有图标尺寸（用于实时更新）
+     */
+    fun refreshIconSizes() {
+        Timber.tag(TAG).d("刷新所有图标尺寸")
+        notifyDataSetChanged()
     }
 }
