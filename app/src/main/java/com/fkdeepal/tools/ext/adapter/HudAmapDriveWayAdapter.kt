@@ -1,10 +1,8 @@
 package com.fkdeepal.tools.ext.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
@@ -63,59 +61,35 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
     fun setImageDrawable(viewBinding: ItemHubDriveWayBinding, resourceName: String,
                          fail: () -> Unit) {
         
-        // 添加内存监控
-        logMemoryStatus("开始加载图标: $resourceName")
-
         runCatching {
-            // 提取图标编号 (从 "ic_land_66" 中提取 "66")
-            val iconNumber = resourceName.removePrefix("ic_land_")
-            Timber.tag(TAG).d("加载车道图标, 资源名: $resourceName, 编号: $iconNumber")
-            
-            val drawable = SvgLoader.loadLandIcon(mContext, iconNumber)
+            val resourceId = mResources.getIdentifier(resourceName, "drawable", mPackageName)
+            var drawable = ContextCompat.getDrawable(mContext, resourceId)
             if (drawable != null) {
-                // 在主线程安全设置图片
-                viewBinding.root.post {
-                    runCatching {
-                        // ========== 新增：应用颜色到图标 ==========
-                        applyColorToDrawable(drawable, resourceName)
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        
-                        // ========== 动态设置图标尺寸 ==========
-                        val iconHeight = PreferenceUtils.getLandIconSize(mContext)
-                        val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
-                        
-                        val layoutParams = viewBinding.ivIcon.layoutParams
-                        layoutParams.width = iconWidth
-                        layoutParams.height = iconHeight
-                        viewBinding.ivIcon.layoutParams = layoutParams
-                        
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
-                        logMemoryStatus("车道图标加载完成: $resourceName")
-                        
-                    }.onFailure { e ->
-                        Timber.tag(TAG).e(e, "设置车道图标时发生错误: $resourceName")
-                        // 加载失败时设置透明背景
-                        viewBinding.ivIcon.setImageDrawable(null)
-                        fail.invoke()
-                    }
-                }
+                // 应用实时颜色
+                applyColorToDrawable(drawable, resourceName)
+                viewBinding.ivIcon.setImageDrawable(drawable)
+                
+                // 动态设置图标尺寸
+                val iconHeight = PreferenceUtils.getLandIconSize(mContext)
+                val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
+                
+                val layoutParams = viewBinding.ivIcon.layoutParams
+                layoutParams.width = iconWidth
+                layoutParams.height = iconHeight
+                viewBinding.ivIcon.layoutParams = layoutParams
+                
+                Timber.tag(TAG).d("成功加载并着色图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
             } else {
-                Timber.tag(TAG).w("车道图标加载为null: $resourceName")
-                viewBinding.root.post {
-                    viewBinding.ivIcon.setImageDrawable(null)
-                    fail.invoke()
-                }
-            }
-        }.onFailure { exception ->
-            Timber.tag(TAG).e(exception, "加载车道图标失败: $resourceName")
-            viewBinding.root.post {
                 viewBinding.ivIcon.setImageDrawable(null)
-                fail.invoke()
+                Timber.tag(TAG).w("图标加载为null: $resourceName")
             }
+        }.onFailure {
+            Timber.tag(TAG).e(it, "加载图标失败: $resourceName")
+            viewBinding.ivIcon.setImageDrawable(null)
+            fail.invoke()
         }
     }
     
-    // ========== 新增：应用颜色到drawable ==========
     private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
         val iconNumber = extractIconNumber(resourceName)
         val primaryColor = ColorPreferenceManager.getPrimaryColor()
@@ -156,7 +130,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         }
     }
     
-    // ========== 新增：提取图标编号 ==========
     private fun extractIconNumber(resourceName: String): Int {
         return try {
             resourceName.replace("ic_land_", "").toInt()
@@ -173,9 +146,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             "HudAmapDriveWayAdapter.setViewHolderData() - pos: $position, icon: ${item.drive_way_lane_Back_icon}"
         )
         
-        // 添加内存监控
-        logMemoryStatus("开始设置车道数据 - 位置: $position")
-        
         runCatching {
             val icon = item.drive_way_lane_Back_icon
             Timber.tag(TAG).d("设置车道数据 - 位置: $position, 图标: $icon")
@@ -185,13 +155,14 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             if (icon.isNullOrBlank()) {
                 // 使用安全的默认资源加载
                 runCatching {
-                    val drawable = SvgLoader.loadLandIcon(mContext, "89")
+                    val resourceId = mResources.getIdentifier("ic_land_89", "drawable", mPackageName)
+                    val drawable = ContextCompat.getDrawable(mContext, resourceId)
                     if (drawable != null) {
-                        // ========== 新增：应用颜色到默认图标 ==========
+                        // 应用颜色到默认图标
                         applyColorToDrawable(drawable, "ic_land_89")
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         
-                        // ========== 动态设置默认图标尺寸 ==========
+                        // 动态设置默认图标尺寸
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
@@ -200,28 +171,25 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("使用默认图标并应用颜色 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
-                        Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
+                        Timber.tag(TAG).w("默认图标加载失败 - 位置: $position")
                     }
-                    logMemoryStatus("默认 SVG 图标设置完成 - 位置: $position")
                 }.onFailure {
-                    Timber.tag(TAG).e(it, "加载默认 SVG 图标失败 - 位置: $position")
+                    Timber.tag(TAG).e(it, "加载默认图标失败 - 位置: $position")
                     viewBinding.ivIcon.setImageDrawable(null)
                 }
             } else {
                 // 完整的 ic_land_xx 图标加载
                 val resourceName = "ic_land_${item.drive_way_lane_Back_icon}"
-                Timber.tag(TAG).d("加载 SVG 图标: $resourceName - 位置: $position")
+                Timber.tag(TAG).d("加载图标: $resourceName - 位置: $position")
                 setImageDrawable(viewBinding, resourceName) {
-                    Timber.tag(TAG).d("SVG 图标加载失败，显示文本: $icon")
+                    Timber.tag(TAG).d("图标加载失败，显示文本: $icon")
                     viewBinding.tvValue.visibility = View.VISIBLE
                     viewBinding.tvValue.text = icon
                 }
             }
-            
-            logMemoryStatus("车道数据设置完成 - 位置: $position")
             
         }.onFailure { exception ->
             Timber.tag(TAG).e(exception, "设置车道数据时发生异常 - 位置: $position")
@@ -236,37 +204,19 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         }
     }
     
-    private fun logMemoryStatus(operation: String) {
-        try {
-            val runtime = Runtime.getRuntime()
-            val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
-            val maxMemory = runtime.maxMemory() / (1024 * 1024)
-            Timber.tag(TAG).d("$operation - 内存: ${usedMemory}MB/${maxMemory}MB")
-        } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "获取内存状态失败")
-        }
-    }
-    
-    /**
-     * 清理适配器相关的缓存
-     */
-    fun clearAdapterCache() {
-        Timber.tag(TAG).d("清理适配器缓存")
-        SvgLoader.clearCache()
-    }
-    
-    /**
-     * 获取缓存统计信息
-     */
-    fun getCacheStatistics(): String {
-        return SvgLoader.getCacheStats()
-    }
-    
     /**
      * 刷新所有图标尺寸（用于实时更新）
      */
     fun refreshIconSizes() {
         Timber.tag(TAG).d("刷新所有图标尺寸")
+        notifyDataSetChanged()
+    }
+    
+    /**
+     * 新增：刷新所有图标颜色（用于实时更新）
+     */
+    fun refreshIconColors() {
+        Timber.tag(TAG).d("刷新所有图标颜色")
         notifyDataSetChanged()
     }
 }
