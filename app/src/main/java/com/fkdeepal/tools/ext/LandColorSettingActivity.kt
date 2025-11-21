@@ -1,20 +1,15 @@
 package com.fkdeepal.tools.ext
 
-import android.graphics.Color
-import android.os.Bundle
-import android.widget.SeekBar
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import com.fkdeepal.tools.ext.base.BaseActivity
 import com.fkdeepal.tools.ext.databinding.ActivityLandColorSettingBinding
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
+import android.graphics.Color
+import android.os.Bundle
 import timber.log.Timber
 
-class LandColorSettingActivity : AppCompatActivity() {
-    
-    private lateinit var binding: ActivityLandColorSettingBinding
-    private val colorManager by lazy { ColorPreferenceManager.getInstance(this) }
-    
-    private var currentPrimaryColor = 0
-    private var currentSecondaryColor = 0
+class LandColorSettingActivity : BaseActivity<ActivityLandColorSettingBinding>() {
     
     companion object {
         private const val TAG = "LandColorSettingActivity"
@@ -23,12 +18,75 @@ class LandColorSettingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Timber.tag(TAG).d("Activity创建")
-        binding = ActivityLandColorSettingBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        // 设置标题
+        supportActionBar?.title = "车道图标颜色设置"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    }
+    
+    override fun initViewBinding(layoutInflater: LayoutInflater): ActivityLandColorSettingBinding? {
+        Timber.tag(TAG).d("初始化视图绑定")
+        return ActivityLandColorSettingBinding.inflate(layoutInflater)
+    }
+    
+    override fun initViews() {
+        Timber.tag(TAG).d("初始化视图")
+        // 初始化颜色选择器
+        initColorPickers()
         
-        initColors()
-        setupSeekBars()
-        setupButtons()
+        // 设置重置按钮
+        mViewBinding.btnResetColors.setOnClickListener {
+            Timber.tag(TAG).i("点击重置颜色按钮")
+            ColorPreferenceManager.resetColors()
+            initColorPickers() // 重新初始化
+        }
+        
+        // 设置保存按钮
+        mViewBinding.btnSaveColors.setOnClickListener {
+            Timber.tag(TAG).i("点击完成按钮")
+            // 颜色已经实时保存，这里只是关闭页面
+            finish()
+        }
+    }
+    
+    private fun initColorPickers() {
+        Timber.tag(TAG).d("初始化颜色选择器")
+        val primaryColor = ColorPreferenceManager.getPrimaryColor()
+        val secondaryColor = ColorPreferenceManager.getSecondaryColor()
+        
+        Timber.tag(TAG).d("当前颜色 - 主色: ${String.format("#%06X", 0xFFFFFF and primaryColor)}, 次色: ${String.format("#%06X", 0xFFFFFF and secondaryColor)}")
+        
+        // 主颜色选择器
+        mViewBinding.primaryColorPicker.setColor(primaryColor)
+        mViewBinding.primaryColorPreview.setBackgroundColor(primaryColor)
+        mViewBinding.primaryColorPicker.setOnColorChangeListener { color ->
+            Timber.tag(TAG).d("主颜色变更: ${String.format("#%06X", 0xFFFFFF and color)}")
+            mViewBinding.primaryColorPreview.setBackgroundColor(color)
+            ColorPreferenceManager.setPrimaryColor(color)
+            updateColorValueDisplays(color, secondaryColor)
+        }
+        
+        // 次颜色选择器
+        mViewBinding.secondaryColorPicker.setColor(secondaryColor)
+        mViewBinding.secondaryColorPreview.setBackgroundColor(secondaryColor)
+        mViewBinding.secondaryColorPicker.setOnColorChangeListener { color ->
+            Timber.tag(TAG).d("次颜色变更: ${String.format("#%06X", 0xFFFFFF and color)}")
+            mViewBinding.secondaryColorPreview.setBackgroundColor(color)
+            ColorPreferenceManager.setSecondaryColor(color)
+            updateColorValueDisplays(primaryColor, color)
+        }
+        
+        // 更新颜色值显示
+        updateColorValueDisplays(primaryColor, secondaryColor)
+    }
+    
+    private fun updateColorValueDisplays(primaryColor: Int, secondaryColor: Int) {
+        mViewBinding.tvPrimaryColorValue.text = String.format("#%06X", 0xFFFFFF and primaryColor)
+        mViewBinding.tvSecondaryColorValue.text = String.format("#%06X", 0xFFFFFF and secondaryColor)
+        Timber.tag(TAG).d("更新颜色显示 - 主色: ${mViewBinding.tvPrimaryColorValue.text}, 次色: ${mViewBinding.tvSecondaryColorValue.text}")
+    }
+    
+    override fun onViewClick(v: View) {
+        // 处理其他点击事件
     }
     
     override fun onResume() {
@@ -44,101 +102,5 @@ class LandColorSettingActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Timber.tag(TAG).d("Activity销毁")
-    }
-    
-    private fun initColors() {
-        Timber.tag(TAG).d("初始化颜色设置")
-        currentPrimaryColor = colorManager.getLandPrimaryColor()
-        currentSecondaryColor = colorManager.getLandSecondaryColor()
-        
-        updateColorDisplays()
-    }
-    
-    private fun setupSeekBars() {
-        Timber.tag(TAG).d("设置颜色滑块")
-        // 主颜色（灰色）RGB控制
-        setupColorSeekBar(binding.seekBarPrimaryRed, binding.seekBarPrimaryGreen, binding.seekBarPrimaryBlue, 
-                         currentPrimaryColor, true)
-        
-        // 次颜色（红色）RGB控制
-        setupColorSeekBar(binding.seekBarSecondaryRed, binding.seekBarSecondaryGreen, binding.seekBarSecondaryBlue, 
-                         currentSecondaryColor, false)
-    }
-    
-    private fun setupColorSeekBar(redSeekBar: SeekBar, greenSeekBar: SeekBar, blueSeekBar: SeekBar, 
-                                 color: Int, isPrimary: Boolean) {
-        val red = Color.red(color)
-        val green = Color.green(color)
-        val blue = Color.blue(color)
-        
-        redSeekBar.progress = red
-        greenSeekBar.progress = green
-        blueSeekBar.progress = blue
-        
-        val seekBarChangeListener = object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    val newColor = Color.rgb(
-                        redSeekBar.progress,
-                        greenSeekBar.progress,
-                        blueSeekBar.progress
-                    )
-                    
-                    if (isPrimary) {
-                        currentPrimaryColor = newColor
-                        binding.primaryColorDisplay.setBackgroundColor(newColor)
-                        binding.tvPrimaryColorValue.text = String.format("#%06X", 0xFFFFFF and newColor)
-                        Timber.tag(TAG).d("主颜色滑块变更: R=${redSeekBar.progress}, G=${greenSeekBar.progress}, B=${blueSeekBar.progress}")
-                    } else {
-                        currentSecondaryColor = newColor
-                        binding.secondaryColorDisplay.setBackgroundColor(newColor)
-                        binding.tvSecondaryColorValue.text = String.format("#%06X", 0xFFFFFF and newColor)
-                        Timber.tag(TAG).d("次颜色滑块变更: R=${redSeekBar.progress}, G=${greenSeekBar.progress}, B=${blueSeekBar.progress}")
-                    }
-                }
-            }
-            
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-                Timber.tag(TAG).d("开始拖动颜色滑块")
-            }
-            
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                Timber.tag(TAG).d("停止拖动颜色滑块")
-            }
-        }
-        
-        redSeekBar.setOnSeekBarChangeListener(seekBarChangeListener)
-        greenSeekBar.setOnSeekBarChangeListener(seekBarChangeListener)
-        blueSeekBar.setOnSeekBarChangeListener(seekBarChangeListener)
-    }
-    
-    private fun setupButtons() {
-        binding.btnSave.setOnClickListener {
-            Timber.tag(TAG).i("点击保存按钮 - 主颜色: ${String.format("#%06X", 0xFFFFFF and currentPrimaryColor)}, 次颜色: ${String.format("#%06X", 0xFFFFFF and currentSecondaryColor)}")
-            colorManager.setLandPrimaryColor(currentPrimaryColor)
-            colorManager.setLandSecondaryColor(currentSecondaryColor)
-            finish()
-        }
-        
-        binding.btnReset.setOnClickListener {
-            Timber.tag(TAG).i("点击重置按钮")
-            colorManager.resetToDefault()
-            initColors()
-            setupSeekBars()
-        }
-        
-        binding.btnCancel.setOnClickListener {
-            Timber.tag(TAG).i("点击取消按钮")
-            finish()
-        }
-    }
-    
-    private fun updateColorDisplays() {
-        Timber.tag(TAG).d("更新颜色显示 - 主颜色: ${String.format("#%06X", 0xFFFFFF and currentPrimaryColor)}, 次颜色: ${String.format("#%06X", 0xFFFFFF and currentSecondaryColor)}")
-        binding.primaryColorDisplay.setBackgroundColor(currentPrimaryColor)
-        binding.secondaryColorDisplay.setBackgroundColor(currentSecondaryColor)
-        
-        binding.tvPrimaryColorValue.text = String.format("#%06X", 0xFFFFFF and currentPrimaryColor)
-        binding.tvSecondaryColorValue.text = String.format("#%06X", 0xFFFFFF and currentSecondaryColor)
     }
 }
