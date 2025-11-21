@@ -3,16 +3,15 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="40dp"
-    android:layout_height="55dp">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
     
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ivIcon"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerInside"
+        android:layout_width="40dp"      
+        android:layout_height="55dp"   
+        android:scaleType="fitCenter"
         android:adjustViewBounds="true"
-        android:layout_centerInParent="true"
         tools:src="@drawable/ic_land_66" />
 
     <TextView
