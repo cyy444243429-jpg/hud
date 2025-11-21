@@ -7,9 +7,7 @@ import timber.log.Timber
 
 object ColorPreferenceManager {
     
-    companion object {
-        private const val TAG = "ColorPreferenceManager"
-    }
+    private const val TAG = "ColorPreferenceManager"
     
     // 颜色变化监听器
     interface OnColorChangeListener {
