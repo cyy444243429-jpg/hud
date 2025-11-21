@@ -73,6 +73,10 @@ object ColorPreferenceManager {
     
     private fun updateAllVisibleIcons() {
         Timber.tag(TAG).d("发送颜色更新事件，更新所有可见图标")
+        
+        // 清理SVG缓存，强制重新加载和着色
+        com.fkdeepal.tools.ext.utils.SvgLoader.clearCache()
+        
         LiveEventBus.get("land_color_update", Boolean::class.java).post(true)
     }
     
