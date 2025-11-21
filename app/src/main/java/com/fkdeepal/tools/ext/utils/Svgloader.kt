@@ -10,7 +10,6 @@ import java.io.InputStream
 object SvgLoader {
     private const val TAG = "SvgLoader"
     private val cache = mutableMapOf<String, PictureDrawable>()
-    private val colorManager by lazy { ColorPreferenceManager.getInstance(AppUtils.appContext) }
     
     // ========== 控制图像大小和位置的关键参数 ==========
     // 调整这个值可以控制所有图标的缩放大小：值越大图标越大
@@ -93,9 +92,9 @@ object SvgLoader {
     private fun replaceColorReferences(inputStream: InputStream): String {
         val svgContent = inputStream.bufferedReader().use { it.readText() }
         
-        // 获取当前颜色值
-        val primaryColor = colorToHexString(colorManager.getLandPrimaryColor())
-        val secondaryColor = colorToHexString(colorManager.getLandSecondaryColor())
+        // 获取当前颜色值 - 使用新的ColorPreferenceManager
+        val primaryColor = colorToHexString(ColorPreferenceManager.getPrimaryColor())
+        val secondaryColor = colorToHexString(ColorPreferenceManager.getSecondaryColor())
         
         Timber.tag(TAG).d("替换颜色 - 主色: $primaryColor, 次色: $secondaryColor")
         
@@ -211,8 +210,8 @@ object SvgLoader {
      * 替换颜色（不涉及transform）
      */
     private fun replaceColorInContent(svgContent: String): String {
-        val primaryColor = colorToHexString(colorManager.getLandPrimaryColor())
-        val secondaryColor = colorToHexString(colorManager.getLandSecondaryColor())
+        val primaryColor = colorToHexString(ColorPreferenceManager.getPrimaryColor())
+        val secondaryColor = colorToHexString(ColorPreferenceManager.getSecondaryColor())
         
         return svgContent
             .replace("@color/land_arrow_primary", primaryColor)
