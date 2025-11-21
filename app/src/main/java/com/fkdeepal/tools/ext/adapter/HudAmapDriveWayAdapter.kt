@@ -114,45 +114,34 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         }
     }
     
-    // ========== 新增：应用颜色到drawable ==========
+    // ========== 修改：应用颜色到drawable，支持高亮显示 ==========
     private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
         val iconNumber = extractIconNumber(resourceName)
-        val primaryColor = ColorPreferenceManager.getPrimaryColor()
-        val secondaryColor = ColorPreferenceManager.getSecondaryColor()
         
-        Timber.tag(TAG).d("应用颜色到图标 - 资源: $resourceName, 编号: $iconNumber, 主色: ${String.format("#%06X", 0xFFFFFF and primaryColor)}, 次色: ${String.format("#%06X", 0xFFFFFF and secondaryColor)}")
-        
-        // 根据图标编号应用颜色策略
-        when {
-            iconNumber in 0..14 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到图标 $resourceName")
+        val color = if (ColorPreferenceManager.isHighlightActive()) {
+            // 高亮状态：使用跑马灯颜色
+            val highlightColor = ColorPreferenceManager.getHighlightColor()
+            Timber.tag(TAG).d("应用高亮颜色到图标: $resourceName, 颜色: ${String.format("#%06X", 0xFFFFFF and highlightColor)}")
+            highlightColor
+        } else {
+            // 正常状态：使用原有颜色逻辑
+            val primaryColor = ColorPreferenceManager.getPrimaryColor()
+            val secondaryColor = ColorPreferenceManager.getSecondaryColor()
+            
+            val normalColor = when {
+                iconNumber in 0..14 -> primaryColor
+                iconNumber in 15..29 -> secondaryColor
+                iconNumber in 30..48 -> primaryColor
+                iconNumber in 49..55 -> primaryColor
+                iconNumber in 56..70 -> secondaryColor
+                iconNumber in 71..83 -> primaryColor
+                else -> primaryColor
             }
-            iconNumber in 15..29 -> {
-                drawable.setTint(secondaryColor)
-                Timber.tag(TAG).d("应用次颜色到图标 $resourceName")
-            }
-            iconNumber in 30..48 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到多箭头图标 $resourceName")
-            }
-            iconNumber in 49..55 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到图标 $resourceName")
-            }
-            iconNumber in 56..70 -> {
-                drawable.setTint(secondaryColor)
-                Timber.tag(TAG).d("应用次颜色到图标 $resourceName")
-            }
-            iconNumber in 71..83 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到多箭头图标 $resourceName")
-            }
-            else -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用默认主颜色到图标 $resourceName")
-            }
+            Timber.tag(TAG).d("应用正常颜色到图标: $resourceName, 颜色: ${String.format("#%06X", 0xFFFFFF and normalColor)}")
+            normalColor
         }
+        
+        drawable.setTint(color)
     }
     
     // ========== 新增：提取图标编号 ==========
