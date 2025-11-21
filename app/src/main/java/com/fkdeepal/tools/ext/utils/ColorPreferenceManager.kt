@@ -1,73 +1,87 @@
 package com.fkdeepal.tools.ext.utils
 
-import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Color
-import androidx.core.content.edit
+import com.fkdeepal.tools.ext.utils.AppUtils
+import com.jeremyliao.liveeventbus.LiveEventBus
 import timber.log.Timber
 
-class ColorPreferenceManager private constructor(context: Context) {
+object ColorPreferenceManager {
     
     companion object {
-        @Volatile
-        private var INSTANCE: ColorPreferenceManager? = null
-        
-        fun getInstance(context: Context): ColorPreferenceManager {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: ColorPreferenceManager(context.applicationContext).also { INSTANCE = it }
-            }
-        }
-        
         private const val TAG = "ColorPreferenceManager"
     }
     
-    private val prefs: SharedPreferences = context.getSharedPreferences("land_colors", Context.MODE_PRIVATE)
+    // 颜色变化监听器
+    interface OnColorChangeListener {
+        fun onPrimaryColorChanged(color: Int)
+        fun onSecondaryColorChanged(color: Int)
+    }
     
-    // 获取主颜色（灰色箭头）
-    fun getLandPrimaryColor(): Int {
-        val color = prefs.getInt("land_primary_color", Color.parseColor("#808080"))
+    private val colorListeners = mutableListOf<OnColorChangeListener>()
+    
+    // 保存主颜色
+    fun setPrimaryColor(color: Int) {
+        Timber.tag(TAG).i("设置主颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
+        PreferenceUtils.putInt(AppUtils.appContext, "primary_color_land", color)
+        notifyPrimaryColorChanged(color)
+        updateAllVisibleIcons()
+    }
+    
+    // 保存次颜色
+    fun setSecondaryColor(color: Int) {
+        Timber.tag(TAG).i("设置次颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
+        PreferenceUtils.putInt(AppUtils.appContext, "secondary_color_land", color)
+        notifySecondaryColorChanged(color)
+        updateAllVisibleIcons()
+    }
+    
+    // 获取主颜色
+    fun getPrimaryColor(): Int {
+        val color = PreferenceUtils.getInt(AppUtils.appContext, "primary_color_land", Color.WHITE)
         Timber.tag(TAG).d("获取主颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
         return color
     }
     
-    // 获取次颜色（红色箭头）
-    fun getLandSecondaryColor(): Int {
-        val color = prefs.getInt("land_secondary_color", Color.parseColor("#FF0000"))
+    // 获取次颜色
+    fun getSecondaryColor(): Int {
+        val color = PreferenceUtils.getInt(AppUtils.appContext, "secondary_color_land", Color.RED)
         Timber.tag(TAG).d("获取次颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
         return color
     }
     
-    // 设置主颜色
-    fun setLandPrimaryColor(color: Int) {
-        Timber.tag(TAG).i("设置主颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
-        prefs.edit {
-            putInt("land_primary_color", color)
+    // 注册监听器
+    fun addColorChangeListener(listener: OnColorChangeListener) {
+        if (!colorListeners.contains(listener)) {
+            colorListeners.add(listener)
+            Timber.tag(TAG).d("注册颜色变化监听器，当前监听器数量: ${colorListeners.size}")
         }
-        notifyColorChange()
     }
     
-    // 设置次颜色
-    fun setLandSecondaryColor(color: Int) {
-        Timber.tag(TAG).i("设置次颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
-        prefs.edit {
-            putInt("land_secondary_color", color)
-        }
-        notifyColorChange()
+    // 移除监听器
+    fun removeColorChangeListener(listener: OnColorChangeListener) {
+        colorListeners.remove(listener)
+        Timber.tag(TAG).d("移除颜色变化监听器，当前监听器数量: ${colorListeners.size}")
     }
     
-    // 重置为默认颜色
-    fun resetToDefault() {
+    private fun notifyPrimaryColorChanged(color: Int) {
+        Timber.tag(TAG).d("通知主颜色变更给 ${colorListeners.size} 个监听器")
+        colorListeners.forEach { it.onPrimaryColorChanged(color) }
+    }
+    
+    private fun notifySecondaryColorChanged(color: Int) {
+        Timber.tag(TAG).d("通知次颜色变更给 ${colorListeners.size} 个监听器")
+        colorListeners.forEach { it.onSecondaryColorChanged(color) }
+    }
+    
+    private fun updateAllVisibleIcons() {
+        Timber.tag(TAG).d("发送颜色更新事件，更新所有可见图标")
+        LiveEventBus.get("land_color_update", Boolean::class.java).post(true)
+    }
+    
+    // 重置颜色
+    fun resetColors() {
         Timber.tag(TAG).i("重置颜色为默认值")
-        prefs.edit {
-            remove("land_primary_color")
-            remove("land_secondary_color")
-        }
-        notifyColorChange()
-    }
-    
-    private fun notifyColorChange() {
-        Timber.tag(TAG).d("颜色变更通知发送")
-        // 这里可以发送事件通知界面更新，如果需要实时更新的话
-        // LiveEventBus.get("land_colors_changed").post(true)
+        setPrimaryColor(Color.WHITE)
+        setSecondaryColor(Color.RED)
     }
 }
