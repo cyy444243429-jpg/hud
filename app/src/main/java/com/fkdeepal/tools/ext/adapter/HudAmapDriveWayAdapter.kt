@@ -1,8 +1,10 @@
 package com.fkdeepal.tools.ext.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.fkdeepal.tools.ext.R
 import com.fkdeepal.tools.ext.adapter.base.BaseAdapter
@@ -11,7 +13,6 @@ import com.fkdeepal.tools.ext.databinding.ItemHubDriveWayBinding
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.SvgLoader
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
-import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.jeremyliao.liveeventbus.LiveEventBus
 import timber.log.Timber
 import java.io.PrintWriter
@@ -69,17 +70,15 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             val iconNumber = resourceName.removePrefix("ic_land_")
             Timber.tag(TAG).d("加载车道图标, 资源名: $resourceName, 编号: $iconNumber")
             
-            // 使用SVG加载器加载图标
             val drawable = SvgLoader.loadLandIcon(mContext, iconNumber)
             if (drawable != null) {
                 // 在主线程安全设置图片
                 viewBinding.root.post {
                     runCatching {
-                        // 应用实时颜色到SVG图标
-                        applyColorToDrawable(drawable, resourceName)
+                        // 注意：这里不再应用颜色，因为SvgLoader内部已经处理了颜色
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         
-                        // 动态设置图标尺寸
+                        // ========== 动态设置图标尺寸 ==========
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
@@ -113,56 +112,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             }
         }
     }
-    
-    // ========== 新增：应用颜色到drawable ==========
-    private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
-        val iconNumber = extractIconNumber(resourceName)
-        val primaryColor = ColorPreferenceManager.getPrimaryColor()
-        val secondaryColor = ColorPreferenceManager.getSecondaryColor()
-        
-        Timber.tag(TAG).d("应用颜色到图标 - 资源: $resourceName, 编号: $iconNumber, 主色: ${String.format("#%06X", 0xFFFFFF and primaryColor)}, 次色: ${String.format("#%06X", 0xFFFFFF and secondaryColor)}")
-        
-        // 根据图标编号应用颜色策略
-        when {
-            iconNumber in 0..14 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到图标 $resourceName")
-            }
-            iconNumber in 15..29 -> {
-                drawable.setTint(secondaryColor)
-                Timber.tag(TAG).d("应用次颜色到图标 $resourceName")
-            }
-            iconNumber in 30..48 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到多箭头图标 $resourceName")
-            }
-            iconNumber in 49..55 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到图标 $resourceName")
-            }
-            iconNumber in 56..70 -> {
-                drawable.setTint(secondaryColor)
-                Timber.tag(TAG).d("应用次颜色到图标 $resourceName")
-            }
-            iconNumber in 71..83 -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用主颜色到多箭头图标 $resourceName")
-            }
-            else -> {
-                drawable.setTint(primaryColor)
-                Timber.tag(TAG).d("应用默认主颜色到图标 $resourceName")
-            }
-        }
-    }
-    
-    // ========== 新增：提取图标编号 ==========
-    private fun extractIconNumber(resourceName: String): Int {
-        return try {
-            resourceName.replace("ic_land_", "").toInt()
-        } catch (e: Exception) {
-            89 // 默认
-        }
-    }
 
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
@@ -186,11 +135,10 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 runCatching {
                     val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
-                        // 应用颜色到默认图标
-                        applyColorToDrawable(drawable, "ic_land_89")
+                        // 注意：这里不再应用颜色，因为SvgLoader内部已经处理了颜色
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         
-                        // 动态设置默认图标尺寸
+                        // ========== 动态设置默认图标尺寸 ==========
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
@@ -266,14 +214,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
      */
     fun refreshIconSizes() {
         Timber.tag(TAG).d("刷新所有图标尺寸")
-        notifyDataSetChanged()
-    }
-    
-    /**
-     * 新增：刷新所有图标颜色（用于实时更新）
-     */
-    fun refreshIconColors() {
-        Timber.tag(TAG).d("刷新所有图标颜色")
         notifyDataSetChanged()
     }
 }
