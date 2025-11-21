@@ -3,14 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="80dp"      <!-- 最大可能尺寸 -->
-    android:layout_height="110dp">   <!-- 最大可能尺寸 -->
+    android:layout_width="80dp"
+    android:layout_height="110dp">
     
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ivIcon"
-        android:layout_width="match_parent"    <!-- 填满父容器 -->
-        android:layout_height="match_parent"   <!-- 填满父容器 -->
-        android:scaleType="centerInside"       <!-- 关键：保持比例居中显示 -->
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
         android:adjustViewBounds="true"
         android:layout_centerInParent="true"
         tools:src="@drawable/ic_land_66" />
