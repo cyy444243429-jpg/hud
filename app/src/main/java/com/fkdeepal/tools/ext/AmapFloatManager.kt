@@ -263,7 +263,7 @@ object AmapFloatManager {
     }
     
     // ========== 新增：判断是否需要高亮显示的方法 ==========
-    private fun shouldHighlightNavigation(info: AmapNaviGuideInfoEvent.NaviGuideInfo): Boolean {
+    private fun shouldHighlightNavigation(info: com.fkdeepal.tools.ext.bean.AmapNaviGuideInfoBean): Boolean {
         val segRemainDis = info.segRemainDis // 当前路段剩余距离
         
         // 检查距离是否在100米以内
@@ -295,5 +295,4 @@ object AmapFloatManager {
             }
         }
     }
-}
 }
