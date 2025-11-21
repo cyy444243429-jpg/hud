@@ -25,6 +25,7 @@ import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideInfoEvent
 import com.fkdeepal.tools.ext.receiver.AmapNaviGuideReceiver
 import com.fkdeepal.tools.ext.ui.setting.SettingActivity
 import com.fkdeepal.tools.ext.utils.AppUtils
+import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.jeremyliao.liveeventbus.LiveEventBus
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -106,6 +107,17 @@ object AmapFloatManager {
             .observeForever { event ->
                 mHudFloatNaviInfoBinding?.apply {
                     val info = event.info
+                    
+                    // ========== 新增：高亮显示检测逻辑 ==========
+                    val shouldHighlight = shouldHighlightNavigation(info)
+                    ColorPreferenceManager.setHighlightActive(shouldHighlight)
+                    
+                    // 如果不需要高亮但之前在高亮状态，清除高亮
+                    if (!shouldHighlight && ColorPreferenceManager.isHighlightActive()) {
+                        ColorPreferenceManager.clearHighlight()
+                    }
+                    
+                    // 原有的图标显示逻辑保持不变
                     tvIconType.visibility = View.GONE
                     val newIcon = info.newIcon
                     when (newIcon) {
@@ -207,6 +219,9 @@ object AmapFloatManager {
                     tvRoadName.setText("")
                     tvRemainInfo.setText("")
                     tvArriveTime.setText("")
+                    
+                    // ========== 新增：导航结束时清除高亮状态 ==========
+                    ColorPreferenceManager.clearHighlight()
                 }
             }
     }
@@ -246,4 +261,39 @@ object AmapFloatManager {
 
         mWindowManager?.addView(naviInfoView, naviInfoLayoutParams)
     }
+    
+    // ========== 新增：判断是否需要高亮显示的方法 ==========
+    private fun shouldHighlightNavigation(info: AmapNaviGuideInfoEvent.NaviGuideInfo): Boolean {
+        val segRemainDis = info.segRemainDis // 当前路段剩余距离
+        
+        // 检查距离是否在100米以内
+        val isWithin100Meters = segRemainDis <= 100 && segRemainDis > 0
+        
+        if (!isWithin100Meters) {
+            return false
+        }
+        
+        // 检查导航动作类型（需要根据实际图标判断）
+        val newIcon = info.newIcon
+        return when (newIcon) {
+            // 转弯相关图标
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10 -> true // 各种转弯
+            // 汇入相关图标  
+            13, 14, 15 -> true // 汇入主路等
+            // 掉头图标
+            19 -> true // 掉头
+            // 终点相关图标
+            28 -> true // 到达目的地
+            // 环岛相关
+            11, 12 -> true // 环岛
+            // 服务区、收费站等也可以考虑加入
+            20, 21, 22, 23 -> true
+            else -> false
+        }.also { shouldHighlight ->
+            if (shouldHighlight) {
+                Log.d("AmapFloatManager", "检测到需要高亮的导航动作: 图标=$newIcon, 距离=${segRemainDis}米")
+            }
+        }
+    }
+}
 }
