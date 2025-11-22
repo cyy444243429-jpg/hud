@@ -3,6 +3,8 @@ package com.fkdeepal.tools.ext
 import android.content.Context
 import android.content.IntentFilter
 import android.graphics.PixelFormat
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -55,6 +57,19 @@ object AmapFloatManager {
     private val mNaviArriveTimeDateFormat = SimpleDateFormat("HH:mm")
     private val mNextRoadEnterTextColor = "#B3FFFFFF".toColorInt()
     
+    // ========== 新增：高亮动画相关 ==========
+    private var highlightAnimationHandler: Handler? = null
+    private val highlightAnimationRunnable = object : Runnable {
+        override fun run() {
+            if (ColorPreferenceManager.isHighlightActive()) {
+                // 强制刷新所有图标来更新跑马灯颜色
+                mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
+                // 每10毫秒刷新一次，实现流畅的跑马灯效果
+                highlightAnimationHandler?.postDelayed(this, 10)
+            }
+        }
+    }
+    
     init {
         registerEvent()
     }
@@ -84,6 +99,7 @@ object AmapFloatManager {
 
     fun hideHudFloat() {
         unregisterReceiver()
+        stopHighlightAnimation()
         mHudFloatNaviInfoBinding?.let {
             mWindowManager?.removeView(it.root)
         }
@@ -110,12 +126,7 @@ object AmapFloatManager {
                     
                     // ========== 新增：高亮显示检测逻辑 ==========
                     val shouldHighlight = shouldHighlightNavigation(info)
-                    ColorPreferenceManager.setHighlightActive(shouldHighlight)
-                    
-                    // 如果不需要高亮但之前在高亮状态，清除高亮
-                    if (!shouldHighlight && ColorPreferenceManager.isHighlightActive()) {
-                        ColorPreferenceManager.clearHighlight()
-                    }
+                    setHighlightState(shouldHighlight)
                     
                     // 原有的图标显示逻辑保持不变
                     tvIconType.visibility = View.GONE
@@ -221,7 +232,7 @@ object AmapFloatManager {
                     tvArriveTime.setText("")
                     
                     // ========== 新增：导航结束时清除高亮状态 ==========
-                    ColorPreferenceManager.clearHighlight()
+                    setHighlightState(false)
                 }
             }
     }
@@ -294,5 +305,30 @@ object AmapFloatManager {
                 Log.d("AmapFloatManager", "检测到需要高亮的导航动作: 图标=$newIcon, 距离=${segRemainDis}米")
             }
         }
+    }
+    
+    // ========== 新增：高亮状态管理方法 ==========
+    private fun setHighlightState(active: Boolean) {
+        if (active) {
+            ColorPreferenceManager.setHighlightActive(true)
+            startHighlightAnimation()
+        } else {
+            ColorPreferenceManager.setHighlightActive(false)
+            stopHighlightAnimation()
+        }
+    }
+    
+    private fun startHighlightAnimation() {
+        if (highlightAnimationHandler == null) {
+            highlightAnimationHandler = Handler(Looper.getMainLooper())
+            highlightAnimationHandler?.post(highlightAnimationRunnable)
+            Log.d("AmapFloatManager", "开始高亮动画")
+        }
+    }
+    
+    private fun stopHighlightAnimation() {
+        highlightAnimationHandler?.removeCallbacks(highlightAnimationRunnable)
+        highlightAnimationHandler = null
+        Log.d("AmapFloatManager", "停止高亮动画")
     }
 }
