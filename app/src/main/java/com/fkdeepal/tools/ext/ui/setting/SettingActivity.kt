@@ -178,20 +178,20 @@ class SettingActivity: AppCompatActivity() {
                 }
             }
             
-            // 图标大小设置点击事件
-            findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
-                Timber.tag(TAG).d("初始化图标大小设置选项")
-                
-                // 设置当前值显示
-                val currentSize = PreferenceUtils.getLandIconSize(requireContext())
-                pref.summary = "当前尺寸: ${currentSize}px (30-150)"
-                
-                pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
-                    Timber.tag(TAG).i("点击图标大小设置")
-                    showIconSizeDialog()
-                    true
-                }
-            }
+        // 图标大小设置点击事件
+findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
+    Timber.tag(TAG).d("初始化图标大小设置选项")
+    
+    // 设置当前值显示
+    val currentSize = PreferenceUtils.getLandIconSize(requireContext())
+    pref.summary = "当前尺寸: ${currentSize}px (30-150)"  // 更新范围显示为30-150
+    
+    pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
+        Timber.tag(TAG).i("点击图标大小设置")
+        showIconSizeDialog()
+        true
+    }
+}
             
             // 新增：图标间距设置点击事件
             findPreference<Preference>("key_land_icon_spacing_pref")?.let { pref ->
