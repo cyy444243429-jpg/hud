@@ -4,14 +4,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:padding="2dp">
     
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/ivIcon"
-        android:layout_width="40dp"      
-        android:layout_height="55dp"   
-        android:scaleType="fitCenter"
-        android:adjustViewBounds="true"
+        android:layout_width="40dp"
+        android:layout_height="55dp"
+        android:scaleType="fitXY"
+        android:adjustViewBounds="false"
         tools:src="@drawable/ic_land_66" />
 
     <TextView
