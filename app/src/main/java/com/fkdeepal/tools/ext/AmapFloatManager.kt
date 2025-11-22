@@ -16,6 +16,7 @@ import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.text.scale
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.fkdeepal.tools.ext.adapter.HudAmapDriveWayAdapter
 import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.FloatHudDriveWayBinding
@@ -25,6 +26,7 @@ import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideEndEvent
 import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideEvent
 import com.fkdeepal.tools.ext.event.hud.AmapNaviGuideInfoEvent
 import com.fkdeepal.tools.ext.receiver.AmapNaviGuideReceiver
+import com.fkdeepal.tools.ext.ui.decoration.HorizontalSpaceItemDecoration
 import com.fkdeepal.tools.ext.ui.setting.SettingActivity
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
@@ -245,8 +247,10 @@ object AmapFloatManager {
 
         mHudFloatNaviInfoBinding = FloatHudNaviInfoBinding.inflate(LayoutInflater.from(context))
         mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
+        
+        // ========== 修改：增加悬浮窗宽度以适应多车道 ==========
         val naviInfoLayoutParams = WindowManager.LayoutParams(
-            275,
+            400,  // 增加宽度以适应多车道
             134,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -263,6 +267,14 @@ object AmapFloatManager {
         SettingActivity.setHudAdapter(mAmapDriveWayInfoAdapter)
         
         mHudFloatNaviInfoBinding?.rvDriverWay?.adapter = mAmapDriveWayInfoAdapter
+
+        // ========== 新增：设置水平线性布局管理器，固定间距 ==========
+        val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        mHudFloatNaviInfoBinding?.rvDriverWay?.layoutManager = layoutManager
+
+        // ========== 新增：设置固定间距的 ItemDecoration ==========
+        val itemDecoration = HorizontalSpaceItemDecoration(2) // 2px 固定间距
+        mHudFloatNaviInfoBinding?.rvDriverWay?.addItemDecoration(itemDecoration)
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
 
