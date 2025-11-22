@@ -82,24 +82,19 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
-                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}dp, 高度: ${iconHeight}dp")
-                        
-                        // 将 dp 转换为 px
-                        val density = mContext.resources.displayMetrics.density
-                        val iconHeightPx = (iconHeight * density).toInt()
-                        val iconWidthPx = (iconWidth * density).toInt()
+                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}px, 高度: ${iconHeight}px")
                         
                         // 设置图片视图的尺寸
                         val layoutParams = viewBinding.ivIcon.layoutParams
-                        layoutParams.width = iconWidthPx
-                        layoutParams.height = iconHeightPx
+                        layoutParams.width = iconWidth
+                        layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
                         // 强制重绘确保尺寸生效
                         viewBinding.ivIcon.requestLayout()
                         viewBinding.ivIcon.invalidate()
                         
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidthPx}x${iconHeightPx}px (${iconWidth}x${iconHeight}dp)")
+                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
                         logMemoryStatus("车道图标加载完成: $resourceName")
                         
                     }.onFailure { e ->
@@ -154,21 +149,16 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
-                        // 将 dp 转换为 px
-                        val density = mContext.resources.displayMetrics.density
-                        val iconHeightPx = (iconHeight * density).toInt()
-                        val iconWidthPx = (iconWidth * density).toInt()
-                        
                         val layoutParams = viewBinding.ivIcon.layoutParams
-                        layoutParams.width = iconWidthPx
-                        layoutParams.height = iconHeightPx
+                        layoutParams.width = iconWidth
+                        layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
                         // 强制重绘确保尺寸生效
                         viewBinding.ivIcon.requestLayout()
                         viewBinding.ivIcon.invalidate()
                         
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidthPx}x${iconHeightPx}px (${iconWidth}x${iconHeight}dp)")
+                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
                         Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
