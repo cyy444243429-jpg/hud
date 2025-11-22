@@ -216,7 +216,9 @@ object PreferenceUtils {
      */
     @JvmStatic
     fun getLandIconSize(context: Context): Int {
-        return getInt(context, KEY_LAND_ICON_SIZE, 55) // 默认55px
+        val size = getInt(context, KEY_LAND_ICON_SIZE, 55) // 默认55px
+        // 限制最大尺寸为60px，避免超出HUD边界
+        return if (size > 60) 60 else size
     }
     
     /**
@@ -224,8 +226,10 @@ object PreferenceUtils {
      */
     @JvmStatic
     fun setLandIconSize(context: Context, size: Int) {
-        putInt(context, KEY_LAND_ICON_SIZE, size)
-        Timber.d("设置车道图标大小: ${size}px")
+        // 限制设置的最大尺寸为60px
+        val limitedSize = if (size > 60) 60 else size
+        putInt(context, KEY_LAND_ICON_SIZE, limitedSize)
+        Timber.d("设置车道图标大小: ${limitedSize}px")
     }
     
     /**
