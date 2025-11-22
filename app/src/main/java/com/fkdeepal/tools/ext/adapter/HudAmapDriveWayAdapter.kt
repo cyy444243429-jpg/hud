@@ -75,18 +75,23 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 // 在主线程安全设置图片
                 viewBinding.root.post {
                     runCatching {
-                        // ========== 修改：移除 applyColorToDrawable 调用 ==========
-                        // 颜色现在在 SVG 加载时直接应用，不需要再设置 tint
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        
+                        // ========== 关键修改：先设置尺寸，再设置图片 ==========
                         // 动态设置图标尺寸
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
+                        
+                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}px, 高度: ${iconHeight}px")
                         
                         val layoutParams = viewBinding.ivIcon.layoutParams
                         layoutParams.width = iconWidth
                         layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
+                        
+                        // 强制重绘确保尺寸生效
+                        viewBinding.ivIcon.requestLayout()
+                        
+                        // 颜色现在在 SVG 加载时直接应用，不需要再设置 tint
+                        viewBinding.ivIcon.setImageDrawable(drawable)
                         
                         Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
                         logMemoryStatus("车道图标加载完成: $resourceName")
@@ -113,17 +118,6 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
             }
         }
     }
-    
-    // ========== 删除：移除 applyColorToDrawable 方法 ==========
-    // 因为颜色现在在 SVG 加载时直接替换 @color/land_arrow_secondary 引用
-    // private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
-    //     ... 原有代码 ...
-    // }
-    
-    // ========== 删除：移除 extractIconNumber 方法 ==========
-    // private fun extractIconNumber(resourceName: String): Int {
-    //     ... 原有代码 ...
-    // }
 
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
@@ -147,9 +141,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 runCatching {
                     val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
-                        // ========== 修改：移除 applyColorToDrawable 调用 ==========
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        
+                        // ========== 关键修改：先设置尺寸，再设置图片 ==========
                         // 动态设置默认图标尺寸
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
@@ -158,6 +150,11 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         layoutParams.width = iconWidth
                         layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
+                        
+                        // 强制重绘确保尺寸生效
+                        viewBinding.ivIcon.requestLayout()
+                        
+                        viewBinding.ivIcon.setImageDrawable(drawable)
                         
                         Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
                     } else {
