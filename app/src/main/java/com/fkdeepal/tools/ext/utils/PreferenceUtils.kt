@@ -216,9 +216,7 @@ object PreferenceUtils {
      */
     @JvmStatic
     fun getLandIconSize(context: Context): Int {
-        val size = getInt(context, KEY_LAND_ICON_SIZE, 55) // 默认55px
-        // 限制最大尺寸为60px，避免超出HUD边界
-        return if (size > 60) 60 else size
+        return getInt(context, KEY_LAND_ICON_SIZE, 55) // 默认55px
     }
     
     /**
@@ -226,10 +224,8 @@ object PreferenceUtils {
      */
     @JvmStatic
     fun setLandIconSize(context: Context, size: Int) {
-        // 限制设置的最大尺寸为60px
-        val limitedSize = if (size > 60) 60 else size
-        putInt(context, KEY_LAND_ICON_SIZE, limitedSize)
-        Timber.d("设置车道图标大小: ${limitedSize}px")
+        putInt(context, KEY_LAND_ICON_SIZE, size)
+        Timber.d("设置车道图标大小: ${size}px")
     }
     
     /**
@@ -240,5 +236,26 @@ object PreferenceUtils {
         val height = getLandIconSize(context)
         // 根据40:55的比例计算宽度
         return (height * 40 / 55)
+    }
+
+    // ========== 新增：车道图标间距设置 ==========
+    
+    private const val KEY_LAND_ICON_SPACING = "key_land_icon_spacing"
+    
+    /**
+     * 获取车道图标间距
+     */
+    @JvmStatic
+    fun getLandIconSpacing(context: Context): Int {
+        return getInt(context, KEY_LAND_ICON_SPACING, 0) // 默认0px
+    }
+    
+    /**
+     * 设置车道图标间距
+     */
+    @JvmStatic
+    fun setLandIconSpacing(context: Context, spacing: Int) {
+        putInt(context, KEY_LAND_ICON_SPACING, spacing)
+        Timber.d("设置车道图标间距: ${spacing}px")
     }
 }
