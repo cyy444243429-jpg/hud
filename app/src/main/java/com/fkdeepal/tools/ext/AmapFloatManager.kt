@@ -248,9 +248,9 @@ object AmapFloatManager {
         mHudFloatNaviInfoBinding = FloatHudNaviInfoBinding.inflate(LayoutInflater.from(context))
         mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
         
-        // ========== 修改：增加悬浮窗宽度以适应多车道 ==========
+        // ========== 修改：恢复原来的宽度 ==========
         val naviInfoLayoutParams = WindowManager.LayoutParams(
-            400,  // 增加宽度以适应多车道
+            275,  // 恢复原来的宽度
             134,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -263,17 +263,16 @@ object AmapFloatManager {
         }
         mAmapDriveWayInfoAdapter = HudAmapDriveWayAdapter(mAmapDriveWayInfoData)
         
-        // ========== 新增：设置适配器引用 ==========
         SettingActivity.setHudAdapter(mAmapDriveWayInfoAdapter)
         
         mHudFloatNaviInfoBinding?.rvDriverWay?.adapter = mAmapDriveWayInfoAdapter
 
-        // ========== 新增：设置水平线性布局管理器，固定间距 ==========
+        // ========== 修改：设置水平线性布局管理器，固定间距 ==========
         val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         mHudFloatNaviInfoBinding?.rvDriverWay?.layoutManager = layoutManager
 
-        // ========== 新增：设置固定间距的 ItemDecoration ==========
-        val itemDecoration = HorizontalSpaceItemDecoration(2) // 2px 固定间距
+        // ========== 修改：设置固定间距的 ItemDecoration ==========
+        val itemDecoration = HorizontalSpaceItemDecoration(1) // 减少到1px间距
         mHudFloatNaviInfoBinding?.rvDriverWay?.addItemDecoration(itemDecoration)
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
