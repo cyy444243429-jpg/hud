@@ -1,6 +1,7 @@
 package com.fkdeepal.tools.ext.ui.setting
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.os.Bundle
@@ -178,20 +179,20 @@ class SettingActivity: AppCompatActivity() {
                 }
             }
             
-        // 图标大小设置点击事件
-findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
-    Timber.tag(TAG).d("初始化图标大小设置选项")
-    
-    // 设置当前值显示
-    val currentSize = PreferenceUtils.getLandIconSize(requireContext())
-    pref.summary = "当前尺寸: ${currentSize}px (30-150)"  // 更新范围显示为30-150
-    
-    pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
-        Timber.tag(TAG).i("点击图标大小设置")
-        showIconSizeDialog()
-        true
-    }
-}
+            // 图标大小设置点击事件
+            findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
+                Timber.tag(TAG).d("初始化图标大小设置选项")
+                
+                // 设置当前值显示
+                val currentSize = PreferenceUtils.getLandIconSize(requireContext())
+                pref.summary = "当前尺寸: ${currentSize}px (30-150)"
+                
+                pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
+                    Timber.tag(TAG).i("点击图标大小设置")
+                    showIconSizeDialog()
+                    true
+                }
+            }
             
             // 新增：图标间距设置点击事件
             findPreference<Preference>("key_land_icon_spacing_pref")?.let { pref ->
@@ -317,21 +318,28 @@ findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
         }
         
         /**
-         * 新增：使用反射安全地调用适配器刷新间距方法
+         * 使用反射安全地调用适配器刷新间距方法
          */
         private fun refreshHudAdapterSpacing(newSpacing: Int) {
             try {
-                val adapter = SettingActivity.getHudAdapter()
-                if (adapter != null) {
-                    // 使用反射调用 refreshIconSpacing 方法
-                    val method = adapter.javaClass.getMethod("refreshIconSpacing")
-                    method.invoke(adapter)
-                    Timber.tag(TAG).d("成功调用适配器刷新间距方法，新间距: ${newSpacing}px")
-                } else {
-                    Timber.tag(TAG).w("适配器为null，无法刷新图标间距")
-                }
+                // 直接调用 AmapFloatManager 的更新间距方法
+                val method = Class.forName("com.fkdeepal.tools.ext.AmapFloatManager")
+                    .getMethod("updateIconSpacing", Context::class.java)
+                method.invoke(null, requireContext())
+                Timber.tag(TAG).d("成功调用AmapFloatManager更新间距方法，新间距: ${newSpacing}px")
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "调用适配器刷新间距方法失败")
+                Timber.tag(TAG).e(e, "调用AmapFloatManager更新间距方法失败")
+                // 备用方案：尝试调用适配器刷新
+                try {
+                    val adapter = SettingActivity.getHudAdapter()
+                    if (adapter != null) {
+                        val method = adapter.javaClass.getMethod("refreshIconSpacing")
+                        method.invoke(adapter)
+                        Timber.tag(TAG).d("使用备用方案刷新间距")
+                    }
+                } catch (e2: Exception) {
+                    Timber.tag(TAG).e(e2, "备用方案也失败")
+                }
             }
         }
         
