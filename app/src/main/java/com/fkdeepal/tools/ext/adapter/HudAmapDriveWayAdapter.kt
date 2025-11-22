@@ -82,19 +82,23 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
-                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}px, 高度: ${iconHeight}px")
+                        Timber.tag(TAG).d("设置图片视图尺寸 - 宽度: ${iconWidth}px, 高度: ${iconHeight}px")
                         
-                        // 设置图片视图的尺寸
+                        // 直接设置图片视图尺寸
                         val layoutParams = viewBinding.ivIcon.layoutParams
                         layoutParams.width = iconWidth
                         layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
-                        // 强制重绘确保尺寸生效
-                        viewBinding.ivIcon.requestLayout()
-                        viewBinding.ivIcon.invalidate()
+                        // 强制测量和布局
+                        viewBinding.ivIcon.measure(
+                            View.MeasureSpec.makeMeasureSpec(iconWidth, View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(iconHeight, View.MeasureSpec.EXACTLY)
+                        )
+                        viewBinding.ivIcon.layout(0, 0, iconWidth, iconHeight)
                         
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 设置尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("图片视图实际尺寸 - 宽度: ${viewBinding.ivIcon.width}px, 高度: ${viewBinding.ivIcon.height}px")
                         logMemoryStatus("车道图标加载完成: $resourceName")
                         
                     }.onFailure { e ->
@@ -154,11 +158,15 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         layoutParams.height = iconHeight
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
-                        // 强制重绘确保尺寸生效
-                        viewBinding.ivIcon.requestLayout()
-                        viewBinding.ivIcon.invalidate()
+                        // 强制测量和布局
+                        viewBinding.ivIcon.measure(
+                            View.MeasureSpec.makeMeasureSpec(iconWidth, View.MeasureSpec.EXACTLY),
+                            View.MeasureSpec.makeMeasureSpec(iconHeight, View.MeasureSpec.EXACTLY)
+                        )
+                        viewBinding.ivIcon.layout(0, 0, iconWidth, iconHeight)
                         
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 设置尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("默认图标实际尺寸 - 宽度: ${viewBinding.ivIcon.width}px, 高度: ${viewBinding.ivIcon.height}px")
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
                         Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
