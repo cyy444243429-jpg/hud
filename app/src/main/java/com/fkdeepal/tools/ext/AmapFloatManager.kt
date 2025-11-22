@@ -62,10 +62,12 @@ object AmapFloatManager {
     private val highlightAnimationRunnable = object : Runnable {
         override fun run() {
             if (ColorPreferenceManager.isHighlightActive()) {
-                // 强制刷新所有图标来更新跑马灯颜色
+                // 强制清理SVG缓存并重新加载，这样会重新应用颜色
+                com.fkdeepal.tools.ext.utils.SvgLoader.clearCache()
+                // 强制刷新所有图标
                 mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
-                // 每10毫秒刷新一次，实现流畅的跑马灯效果
-                highlightAnimationHandler?.postDelayed(this, 10)
+                // 每16毫秒刷新一次（约60fps）
+                highlightAnimationHandler?.postDelayed(this, 16)
             }
         }
     }
@@ -309,12 +311,17 @@ object AmapFloatManager {
     
     // ========== 新增：高亮状态管理方法 ==========
     private fun setHighlightState(active: Boolean) {
+        val currentState = ColorPreferenceManager.isHighlightActive()
+        Log.d("AmapFloatManager", "设置高亮状态: $active, 当前状态: $currentState")
+        
         if (active) {
             ColorPreferenceManager.setHighlightActive(true)
             startHighlightAnimation()
+            Log.d("AmapFloatManager", "✅ 高亮状态已设置为true，启动动画")
         } else {
             ColorPreferenceManager.setHighlightActive(false)
             stopHighlightAnimation()
+            Log.d("AmapFloatManager", "高亮状态已设置为false，停止动画")
         }
     }
     
