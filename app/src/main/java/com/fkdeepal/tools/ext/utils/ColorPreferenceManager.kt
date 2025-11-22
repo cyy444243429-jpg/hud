@@ -21,6 +21,12 @@ object ColorPreferenceManager {
     fun setPrimaryColor(color: Int) {
         Timber.tag(TAG).i("设置主颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
         PreferenceUtils.putInt(AppUtils.appContext, "primary_color_land", color)
+        
+        // 同步到SVG加载器
+        val colorHex = String.format("#%06X", 0xFFFFFF and color)
+        val secondaryColorHex = String.format("#%06X", 0xFFFFFF and getSecondaryColor())
+        com.fkdeepal.tools.ext.utils.SvgLoader.updateColors(colorHex, secondaryColorHex)
+        
         notifyPrimaryColorChanged(color)
         updateAllVisibleIcons()
     }
@@ -29,6 +35,12 @@ object ColorPreferenceManager {
     fun setSecondaryColor(color: Int) {
         Timber.tag(TAG).i("设置次颜色: ${String.format("#%06X", 0xFFFFFF and color)}")
         PreferenceUtils.putInt(AppUtils.appContext, "secondary_color_land", color)
+        
+        // 同步到SVG加载器
+        val primaryColorHex = String.format("#%06X", 0xFFFFFF and getPrimaryColor())
+        val colorHex = String.format("#%06X", 0xFFFFFF and color)
+        com.fkdeepal.tools.ext.utils.SvgLoader.updateColors(primaryColorHex, colorHex)
+        
         notifySecondaryColorChanged(color)
         updateAllVisibleIcons()
     }
@@ -113,6 +125,9 @@ object ColorPreferenceManager {
             lastHighlightTime = if (active) System.currentTimeMillis() else 0
             Timber.tag(TAG).d("高亮状态变更: $active")
             
+            // 同步到SVG加载器
+            com.fkdeepal.tools.ext.utils.SvgLoader.setHighlightActive(active)
+            
             // 状态变化时强制刷新图标
             updateAllVisibleIcons()
         }
@@ -150,5 +165,13 @@ object ColorPreferenceManager {
     // 获取高亮状态持续时间（用于调试）
     fun getHighlightDuration(): Long {
         return if (isHighlightActive) System.currentTimeMillis() - lastHighlightTime else 0
+    }
+    
+    // 初始化时同步颜色
+    init {
+        // 应用启动时同步初始颜色
+        val primaryColorHex = String.format("#%06X", 0xFFFFFF and getPrimaryColor())
+        val secondaryColorHex = String.format("#%06X", 0xFFFFFF and getSecondaryColor())
+        com.fkdeepal.tools.ext.utils.SvgLoader.updateColors(primaryColorHex, secondaryColorHex)
     }
 }
