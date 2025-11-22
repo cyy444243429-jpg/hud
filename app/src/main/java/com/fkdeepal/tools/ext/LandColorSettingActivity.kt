@@ -30,6 +30,14 @@ class LandColorSettingActivity : BaseActivity<ActivityLandColorSettingBinding>()
     
     override fun initViews() {
         Timber.tag(TAG).d("初始化视图")
+        
+        // 初始化高亮开关
+        mViewBinding.switchHighlight.isChecked = ColorPreferenceManager.isHighlightEnabled()
+        mViewBinding.switchHighlight.setOnCheckedChangeListener { _, isChecked ->
+            Timber.tag(TAG).i("高亮显示开关: $isChecked")
+            ColorPreferenceManager.setHighlightEnabled(isChecked)
+        }
+        
         // 初始化颜色选择器
         initColorPickers()
         
