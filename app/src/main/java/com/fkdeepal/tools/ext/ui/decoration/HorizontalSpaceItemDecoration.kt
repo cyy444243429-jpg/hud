@@ -10,17 +10,14 @@ class HorizontalSpaceItemDecoration(private val horizontalSpaceWidth: Int) : Rec
         super.getItemOffsets(outRect, view, parent, state)
         
         val position = parent.getChildAdapterPosition(view)
-        val itemCount = parent.adapter?.itemCount ?: 0
         
-        // 第一个项左边距为0，其他项左边距为固定值
+        // 只有第一个项左边距为0，其他项左边距为固定值
         if (position > 0) {
             outRect.left = horizontalSpaceWidth
         }
         
-        // 最后一个项右边距为0
-        if (position == itemCount - 1) {
-            outRect.right = 0
-        }
+        // 所有项右边距都为0
+        outRect.right = 0
         
         // 上下边距为0，保持紧凑
         outRect.top = 0
