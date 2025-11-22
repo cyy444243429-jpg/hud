@@ -75,25 +75,31 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 // 在主线程安全设置图片
                 viewBinding.root.post {
                     runCatching {
-                        // ========== 关键修改：先设置尺寸，再设置图片 ==========
+                        // 先设置图片
+                        viewBinding.ivIcon.setImageDrawable(drawable)
+                        
                         // 动态设置图标尺寸
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
-                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}px, 高度: ${iconHeight}px")
+                        Timber.tag(TAG).d("设置图标尺寸 - 宽度: ${iconWidth}dp, 高度: ${iconHeight}dp")
                         
+                        // 将 dp 转换为 px
+                        val density = mContext.resources.displayMetrics.density
+                        val iconHeightPx = (iconHeight * density).toInt()
+                        val iconWidthPx = (iconWidth * density).toInt()
+                        
+                        // 设置图片视图的尺寸
                         val layoutParams = viewBinding.ivIcon.layoutParams
-                        layoutParams.width = iconWidth
-                        layoutParams.height = iconHeight
+                        layoutParams.width = iconWidthPx
+                        layoutParams.height = iconHeightPx
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
                         // 强制重绘确保尺寸生效
                         viewBinding.ivIcon.requestLayout()
+                        viewBinding.ivIcon.invalidate()
                         
-                        // 颜色现在在 SVG 加载时直接应用，不需要再设置 tint
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 尺寸: ${iconWidthPx}x${iconHeightPx}px (${iconWidth}x${iconHeight}dp)")
                         logMemoryStatus("车道图标加载完成: $resourceName")
                         
                     }.onFailure { e ->
@@ -141,22 +147,28 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 runCatching {
                     val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
-                        // ========== 关键修改：先设置尺寸，再设置图片 ==========
+                        // 先设置图片
+                        viewBinding.ivIcon.setImageDrawable(drawable)
+                        
                         // 动态设置默认图标尺寸
                         val iconHeight = PreferenceUtils.getLandIconSize(mContext)
                         val iconWidth = PreferenceUtils.getLandIconWidth(mContext)
                         
+                        // 将 dp 转换为 px
+                        val density = mContext.resources.displayMetrics.density
+                        val iconHeightPx = (iconHeight * density).toInt()
+                        val iconWidthPx = (iconWidth * density).toInt()
+                        
                         val layoutParams = viewBinding.ivIcon.layoutParams
-                        layoutParams.width = iconWidth
-                        layoutParams.height = iconHeight
+                        layoutParams.width = iconWidthPx
+                        layoutParams.height = iconHeightPx
                         viewBinding.ivIcon.layoutParams = layoutParams
                         
                         // 强制重绘确保尺寸生效
                         viewBinding.ivIcon.requestLayout()
+                        viewBinding.ivIcon.invalidate()
                         
-                        viewBinding.ivIcon.setImageDrawable(drawable)
-                        
-                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidth}x${iconHeight}px")
+                        Timber.tag(TAG).d("使用默认 SVG 图标 - 位置: $position, 尺寸: ${iconWidthPx}x${iconHeightPx}px (${iconWidth}x${iconHeight}dp)")
                     } else {
                         viewBinding.ivIcon.setImageDrawable(null)
                         Timber.tag(TAG).w("默认 SVG 图标加载失败 - 位置: $position")
