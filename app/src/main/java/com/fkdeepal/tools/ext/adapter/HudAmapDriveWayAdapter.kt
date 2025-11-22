@@ -75,8 +75,8 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 // 在主线程安全设置图片
                 viewBinding.root.post {
                     runCatching {
-                        // 应用实时颜色到SVG图标
-                        applyColorToDrawable(drawable, resourceName)
+                        // ========== 修改：移除 applyColorToDrawable 调用 ==========
+                        // 颜色现在在 SVG 加载时直接应用，不需要再设置 tint
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         
                         // 动态设置图标尺寸
@@ -114,44 +114,16 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
         }
     }
     
-    // ========== 修改：应用颜色到drawable，支持高亮显示 ==========
-    private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
-        val iconNumber = extractIconNumber(resourceName)
-        
-        val color = if (ColorPreferenceManager.isHighlightActive()) {
-            // 高亮状态：使用跑马灯颜色
-            val highlightColor = ColorPreferenceManager.getHighlightColor()
-            Timber.tag(TAG).d("应用高亮颜色到图标: $resourceName, 颜色: ${String.format("#%06X", 0xFFFFFF and highlightColor)}")
-            highlightColor
-        } else {
-            // 正常状态：使用原有颜色逻辑
-            val primaryColor = ColorPreferenceManager.getPrimaryColor()
-            val secondaryColor = ColorPreferenceManager.getSecondaryColor()
-            
-            val normalColor = when {
-                iconNumber in 0..14 -> primaryColor
-                iconNumber in 15..29 -> secondaryColor
-                iconNumber in 30..48 -> primaryColor
-                iconNumber in 49..55 -> primaryColor
-                iconNumber in 56..70 -> secondaryColor
-                iconNumber in 71..83 -> primaryColor
-                else -> primaryColor
-            }
-            Timber.tag(TAG).d("应用正常颜色到图标: $resourceName, 颜色: ${String.format("#%06X", 0xFFFFFF and normalColor)}")
-            normalColor
-        }
-        
-        drawable.setTint(color)
-    }
+    // ========== 删除：移除 applyColorToDrawable 方法 ==========
+    // 因为颜色现在在 SVG 加载时直接替换 @color/land_arrow_secondary 引用
+    // private fun applyColorToDrawable(drawable: android.graphics.drawable.Drawable, resourceName: String) {
+    //     ... 原有代码 ...
+    // }
     
-    // ========== 新增：提取图标编号 ==========
-    private fun extractIconNumber(resourceName: String): Int {
-        return try {
-            resourceName.replace("ic_land_", "").toInt()
-        } catch (e: Exception) {
-            89 // 默认
-        }
-    }
+    // ========== 删除：移除 extractIconNumber 方法 ==========
+    // private fun extractIconNumber(resourceName: String): Int {
+    //     ... 原有代码 ...
+    // }
 
     override fun setViewHolderData(viewBinding: ItemHubDriveWayBinding,
                                    item: AmapDriveWayInfoBean,
@@ -175,8 +147,7 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 runCatching {
                     val drawable = SvgLoader.loadLandIcon(mContext, "89")
                     if (drawable != null) {
-                        // 应用颜色到默认图标
-                        applyColorToDrawable(drawable, "ic_land_89")
+                        // ========== 修改：移除 applyColorToDrawable 调用 ==========
                         viewBinding.ivIcon.setImageDrawable(drawable)
                         
                         // 动态设置默认图标尺寸
