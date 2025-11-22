@@ -11,6 +11,30 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- 高亮显示开关 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingVertical="12dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="高亮显示（100米内闪烁）"
+                android:textSize="16sp"
+                android:textColor="@color/white" />
+
+            <Switch
+                android:id="@+id/switchHighlight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
         <!-- 主颜色设置 -->
         <TextView
             android:layout_width="wrap_content"
