@@ -11,9 +11,11 @@ class HorizontalSpaceItemDecoration(private val horizontalSpaceWidth: Int) : Rec
         
         val position = parent.getChildAdapterPosition(view)
         
-        // 只有第一个项左边距为0，其他项左边距为固定值
+        // 使用负间距让图标重叠
         if (position > 0) {
             outRect.left = horizontalSpaceWidth
+        } else {
+            outRect.left = 0
         }
         
         // 所有项右边距都为0
