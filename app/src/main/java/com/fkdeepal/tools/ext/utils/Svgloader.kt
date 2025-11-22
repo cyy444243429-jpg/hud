@@ -11,6 +11,51 @@ object SvgLoader {
     private const val TAG = "SvgLoader"
     private val cache = mutableMapOf<String, PictureDrawable>()
     
+    // ========== 新增：动态颜色支持 ==========
+    private var currentPrimaryColor = "#FFFFFF"
+    private var currentSecondaryColor = "#FF0000"
+    private var isHighlightActive = false
+    
+    // 设置颜色（在颜色变化时调用）
+    fun updateColors(primaryColor: String, secondaryColor: String) {
+        currentPrimaryColor = primaryColor
+        currentSecondaryColor = secondaryColor
+        Timber.tag(TAG).d("更新SVG颜色 - 主色: $primaryColor, 次色: $secondaryColor")
+    }
+    
+    // 设置高亮状态
+    fun setHighlightActive(active: Boolean) {
+        isHighlightActive = active
+        Timber.tag(TAG).d("设置高亮状态: $active")
+        // 高亮状态变化时清理缓存，强制重新加载
+        clearCache()
+    }
+    
+    // 获取当前应该使用的次颜色（考虑高亮状态）
+    private fun getCurrentSecondaryColor(): String {
+        return if (isHighlightActive) {
+            // 高亮状态：返回跑马灯颜色
+            calculateRunningLightColor()
+        } else {
+            // 正常状态：返回设置的次颜色
+            currentSecondaryColor
+        }
+    }
+    
+    // 跑马灯颜色计算
+    private fun calculateRunningLightColor(): String {
+        val time = System.currentTimeMillis() % 2000
+        val progress = (time / 2000.0f).coerceIn(0f, 1f)
+        
+        val color = when {
+            progress < 0.33f -> android.graphics.Color.rgb(255, (255 * progress * 3).toInt(), 0) // 红→黄
+            progress < 0.66f -> android.graphics.Color.rgb((255 * (1 - (progress - 0.33f) * 3)).toInt(), 255, 0) // 黄→绿
+            else -> android.graphics.Color.rgb(0, 255, (255 * (progress - 0.66f) * 3).toInt()) // 绿→青
+        }
+        
+        return String.format("#%06X", 0xFFFFFF and color)
+    }
+    
     // ========== 控制图像大小和位置的关键参数 ==========
     // 调整这个值可以控制所有图标的缩放大小：值越大图标越大
     private const val UNIFORM_SCALE = 0.05f
@@ -92,16 +137,13 @@ object SvgLoader {
     private fun replaceColorReferences(inputStream: InputStream): String {
         val svgContent = inputStream.bufferedReader().use { it.readText() }
         
-        // 获取当前颜色值 - 使用新的ColorPreferenceManager
-        val primaryColor = colorToHexString(ColorPreferenceManager.getPrimaryColor())
-        val secondaryColor = colorToHexString(ColorPreferenceManager.getSecondaryColor())
-        
-        Timber.tag(TAG).d("替换颜色 - 主色: $primaryColor, 次色: $secondaryColor")
+        val finalSecondaryColor = getCurrentSecondaryColor()
+        Timber.tag(TAG).d("替换颜色引用 - 主色: $currentPrimaryColor, 次色: $finalSecondaryColor, 高亮: $isHighlightActive")
         
         // 替换颜色引用
         return svgContent
-            .replace("@color/land_arrow_primary", primaryColor)
-            .replace("@color/land_arrow_secondary", secondaryColor)
+            .replace("@color/land_arrow_primary", currentPrimaryColor)
+            .replace("@color/land_arrow_secondary", finalSecondaryColor)
     }
     
     /**
@@ -210,12 +252,11 @@ object SvgLoader {
      * 替换颜色（不涉及transform）
      */
     private fun replaceColorInContent(svgContent: String): String {
-        val primaryColor = colorToHexString(ColorPreferenceManager.getPrimaryColor())
-        val secondaryColor = colorToHexString(ColorPreferenceManager.getSecondaryColor())
+        val finalSecondaryColor = getCurrentSecondaryColor()
         
         return svgContent
-            .replace("@color/land_arrow_primary", primaryColor)
-            .replace("@color/land_arrow_secondary", secondaryColor)
+            .replace("@color/land_arrow_primary", currentPrimaryColor)
+            .replace("@color/land_arrow_secondary", finalSecondaryColor)
     }
     
     // ========== 原有其他方法保持不变 ==========
