@@ -31,7 +31,7 @@ import java.util.Locale
 class SettingActivity: AppCompatActivity() {
     companion object{
         private const val TAG = "SettingActivity"
-        // 修改：移除属性，只使用方法
+        // 修改：使用 Any 类型避免编译错误
         private var _hudAdapter: Any? = null
 
         fun startActivity(activity: Activity) {
@@ -178,17 +178,32 @@ class SettingActivity: AppCompatActivity() {
                 }
             }
             
-            // 新增：图标大小设置点击事件
+            // 图标大小设置点击事件
             findPreference<Preference>("key_land_icon_size_pref")?.let { pref ->
                 Timber.tag(TAG).d("初始化图标大小设置选项")
                 
                 // 设置当前值显示
                 val currentSize = PreferenceUtils.getLandIconSize(requireContext())
-                pref.summary = "当前尺寸: ${currentSize}px (30-80)"
+                pref.summary = "当前尺寸: ${currentSize}px (30-150)"
                 
                 pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
                     Timber.tag(TAG).i("点击图标大小设置")
                     showIconSizeDialog()
+                    true
+                }
+            }
+            
+            // 新增：图标间距设置点击事件
+            findPreference<Preference>("key_land_icon_spacing_pref")?.let { pref ->
+                Timber.tag(TAG).d("初始化图标间距设置选项")
+                
+                // 设置当前值显示
+                val currentSpacing = PreferenceUtils.getLandIconSpacing(requireContext())
+                pref.summary = "当前间距: ${currentSpacing}px (-30到30)"
+                
+                pref.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference ->
+                    Timber.tag(TAG).i("点击图标间距设置")
+                    showIconSpacingDialog()
                     true
                 }
             }
@@ -206,7 +221,7 @@ class SettingActivity: AppCompatActivity() {
             
             // 设置 SeekBar 范围
             seekBar.min = 30
-            seekBar.max = 80
+            seekBar.max = 150
             seekBar.progress = currentSize
             textValue.text = "${currentSize}px"
             
@@ -227,7 +242,7 @@ class SettingActivity: AppCompatActivity() {
                     PreferenceUtils.setLandIconSize(requireContext(), newSize)
                     
                     // 更新摘要
-                    findPreference<Preference>("key_land_icon_size_pref")?.summary = "当前尺寸: ${newSize}px (30-80)"
+                    findPreference<Preference>("key_land_icon_size_pref")?.summary = "当前尺寸: ${newSize}px (30-150)"
                     
                     // 修改：使用反射调用刷新方法，避免编译错误
                     refreshHudAdapter(newSize)
@@ -245,6 +260,79 @@ class SettingActivity: AppCompatActivity() {
                     Timber.tag(TAG).d("图标大小设置对话框关闭")
                 }
                 .show()
+        }
+        
+        /**
+         * 显示图标间距设置对话框
+         */
+        private fun showIconSpacingDialog() {
+            val currentSpacing = PreferenceUtils.getLandIconSpacing(requireContext())
+            
+            val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_icon_spacing, null)
+            val seekBar = dialogView.findViewById<SeekBar>(R.id.seekBar_icon_spacing)
+            val textValue = dialogView.findViewById<TextView>(R.id.text_spacing_value)
+            
+            // 设置 SeekBar 范围 (-30 到 30)
+            seekBar.min = -30
+            seekBar.max = 30
+            seekBar.progress = currentSpacing + 30 // 转换为0-60的范围
+            textValue.text = "${currentSpacing}px"
+            
+            seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                    val spacing = progress - 30 // 转换回-30到30的范围
+                    textValue.text = "${spacing}px"
+                }
+                
+                override fun onStartTrackingTouch(seekBar: SeekBar) {
+                    Timber.tag(TAG).d("开始调整图标间距")
+                }
+                
+                override fun onStopTrackingTouch(seekBar: SeekBar) {
+                    val newSpacing = seekBar.progress - 30
+                    Timber.tag(TAG).i("图标间距调整完成: ${newSpacing}px")
+                    
+                    // 保存新的间距
+                    PreferenceUtils.setLandIconSpacing(requireContext(), newSpacing)
+                    
+                    // 更新摘要
+                    findPreference<Preference>("key_land_icon_spacing_pref")?.summary = "当前间距: ${newSpacing}px (-30到30)"
+                    
+                    // 刷新适配器
+                    refreshHudAdapterSpacing(newSpacing)
+                }
+            })
+            
+            AlertDialog.Builder(requireContext())
+                .setTitle("车道图标间距")
+                .setView(dialogView)
+                .setPositiveButton("确定") { dialog, _ -> 
+                    Timber.tag(TAG).d("图标间距设置对话框确认")
+                    dialog.dismiss() 
+                }
+                .setOnDismissListener {
+                    Timber.tag(TAG).d("图标间距设置对话框关闭")
+                }
+                .show()
+        }
+        
+        /**
+         * 新增：使用反射安全地调用适配器刷新间距方法
+         */
+        private fun refreshHudAdapterSpacing(newSpacing: Int) {
+            try {
+                val adapter = SettingActivity.getHudAdapter()
+                if (adapter != null) {
+                    // 使用反射调用 refreshIconSpacing 方法
+                    val method = adapter.javaClass.getMethod("refreshIconSpacing")
+                    method.invoke(adapter)
+                    Timber.tag(TAG).d("成功调用适配器刷新间距方法，新间距: ${newSpacing}px")
+                } else {
+                    Timber.tag(TAG).w("适配器为null，无法刷新图标间距")
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "调用适配器刷新间距方法失败")
+            }
         }
         
         /**
