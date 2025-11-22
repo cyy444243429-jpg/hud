@@ -32,7 +32,6 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
-import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
@@ -250,8 +249,9 @@ object AmapFloatManager {
         mHudFloatNaviInfoBinding = FloatHudNaviInfoBinding.inflate(LayoutInflater.from(context))
         mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
         
+        // ========== 修改：增大HUD宽度以容纳更大图标 ==========
         val naviInfoLayoutParams = WindowManager.LayoutParams(
-            350,
+            350,  // 增大宽度以容纳更大图标
             134,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -272,25 +272,8 @@ object AmapFloatManager {
         val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         mHudFloatNaviInfoBinding?.rvDriverWay?.layoutManager = layoutManager
 
-        // ========== 修改：先移除所有可能的ItemDecoration ==========
-        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView ->
-            // 移除所有现有的ItemDecoration
-            for (i in recyclerView.itemDecorationCount - 1 downTo 0) {
-                recyclerView.removeItemDecorationAt(i)
-            }
-            
-            // 添加我们的间距设置
-            val currentSpacing = PreferenceUtils.getLandIconSpacing(context)
-            Timber.tag(TAG).d("设置图标间距: ${currentSpacing}px")
-            val itemDecoration = HorizontalSpaceItemDecoration(currentSpacing)
-            recyclerView.addItemDecoration(itemDecoration)
-            
-            // 强制重新布局
-            recyclerView.post {
-                recyclerView.requestLayout()
-                recyclerView.invalidate()
-            }
-        }
+        // ========== 修改：使用动态间距 ==========
+        updateIconSpacing(context)
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
 
@@ -301,6 +284,29 @@ object AmapFloatManager {
         naviInfoLayoutParams.gravity = Gravity.RIGHT or Gravity.BOTTOM
 
         mWindowManager?.addView(naviInfoView, naviInfoLayoutParams)
+    }
+
+    /**
+     * 新增：更新图标间距（用于实时刷新）
+     */
+    fun updateIconSpacing(context: Context) {
+        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView ->
+            // 移除所有现有的ItemDecoration
+            for (i in recyclerView.itemDecorationCount - 1 downTo 0) {
+                recyclerView.removeItemDecorationAt(i)
+            }
+            
+            // 获取当前间距设置并应用新的ItemDecoration
+            val currentSpacing = PreferenceUtils.getLandIconSpacing(context)
+            val itemDecoration = HorizontalSpaceItemDecoration(currentSpacing)
+            recyclerView.addItemDecoration(itemDecoration)
+            
+            // 强制刷新RecyclerView
+            recyclerView.invalidateItemDecorations()
+            mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
+            
+            Timber.d("AmapFloatManager", "图标间距已更新: ${currentSpacing}px")
+        }
     }
     
     // ========== 新增：判断是否需要高亮显示的方法 ==========
