@@ -97,8 +97,10 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                         )
                         viewBinding.ivIcon.layout(0, 0, iconWidth, iconHeight)
                         
-                        Timber.tag(TAG).d("成功加载车道图标: $resourceName, 设置尺寸: ${iconWidth}x${iconHeight}px")
-                        Timber.tag(TAG).d("图片视图实际尺寸 - 宽度: ${viewBinding.ivIcon.width}px, 高度: ${viewBinding.ivIcon.height}px")
+                        // ========== 新增：调试日志 ==========
+                        Timber.tag(TAG).d("✅ 图标尺寸设置完成 - 设置: ${iconWidth}x${iconHeight}px, 实际: ${viewBinding.ivIcon.width}x${viewBinding.ivIcon.height}px")
+                        Timber.tag(TAG).d("✅ PreferenceUtils.getLandIconSize: ${PreferenceUtils.getLandIconSize(mContext)}px")
+                        
                         logMemoryStatus("车道图标加载完成: $resourceName")
                         
                     }.onFailure { e ->
@@ -241,6 +243,14 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
      */
     fun refreshIconColors() {
         Timber.tag(TAG).d("刷新所有图标颜色")
+        notifyDataSetChanged()
+    }
+    
+    /**
+     * 新增：刷新所有图标间距（用于实时更新）
+     */
+    fun refreshIconSpacing() {
+        Timber.tag(TAG).d("刷新所有图标间距")
         notifyDataSetChanged()
     }
 }
