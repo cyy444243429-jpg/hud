@@ -30,6 +30,7 @@ import com.fkdeepal.tools.ext.ui.decoration.HorizontalSpaceItemDecoration
 import com.fkdeepal.tools.ext.ui.setting.SettingActivity
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
+import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -248,9 +249,9 @@ object AmapFloatManager {
         mHudFloatNaviInfoBinding = FloatHudNaviInfoBinding.inflate(LayoutInflater.from(context))
         mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
         
-        // ========== 修改：恢复原来的宽度 ==========
+        // ========== 修改：增大HUD宽度以容纳更大图标 ==========
         val naviInfoLayoutParams = WindowManager.LayoutParams(
-            275,  // 恢复原来的宽度
+            350,  // 增大宽度以容纳更大图标
             134,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -267,12 +268,13 @@ object AmapFloatManager {
         
         mHudFloatNaviInfoBinding?.rvDriverWay?.adapter = mAmapDriveWayInfoAdapter
 
-        // ========== 修改：设置水平线性布局管理器，固定间距 ==========
+        // 设置水平线性布局管理器
         val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         mHudFloatNaviInfoBinding?.rvDriverWay?.layoutManager = layoutManager
 
-        // ========== 修改：设置固定间距的 ItemDecoration ==========
-        val itemDecoration = HorizontalSpaceItemDecoration(1) // 减少到1px间距
+        // ========== 修改：使用动态间距 ==========
+        val currentSpacing = PreferenceUtils.getLandIconSpacing(context)
+        val itemDecoration = HorizontalSpaceItemDecoration(currentSpacing)
         mHudFloatNaviInfoBinding?.rvDriverWay?.addItemDecoration(itemDecoration)
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
