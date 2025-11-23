@@ -32,6 +32,7 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
+import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
