@@ -33,6 +33,7 @@ import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
 import java.text.DecimalFormat
+import timber.log.Timber
 import java.text.SimpleDateFormat
 
 object AmapFloatManager {
