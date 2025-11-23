@@ -24,6 +24,7 @@ import com.fkdeepal.tools.ext.ui.video.HudVideoActivity
 import com.fkdeepal.tools.ext.ui.video.VideoPresentation
 import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
+import com.jeremyliao.liveeventbus.LiveEventBus
 import timber.log.Timber
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -321,13 +322,12 @@ class SettingActivity: AppCompatActivity() {
          */
         private fun refreshHudAdapterSpacing(newSpacing: Int) {
             try {
-                // ========== 修改：直接调用 AmapFloatManager 的刷新方法 ==========
-                val amapFloatManagerClass = Class.forName("com.fkdeepal.tools.ext.AmapFloatManager")
-                val refreshMethod = amapFloatManagerClass.getMethod("refreshIconSpacing")
-                refreshMethod.invoke(null)
-                Timber.tag(TAG).d("成功调用AmapFloatManager刷新间距方法，新间距: ${newSpacing}px")
+                // ========== 修改：使用 LiveEventBus 发送间距更新事件 ==========
+                LiveEventBus.get("land_icon_spacing_update", Int::class.java)
+                    .post(newSpacing)
+                Timber.tag(TAG).d("发送图标间距更新事件: ${newSpacing}px")
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "调用AmapFloatManager刷新间距方法失败")
+                Timber.tag(TAG).e(e, "发送图标间距更新事件失败")
             }
         }
         
