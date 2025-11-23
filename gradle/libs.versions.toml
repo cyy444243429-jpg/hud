@@ -26,7 +26,7 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 
 liveEventBus = { group = "com.github.neo-turak", name = "LiveEventBus", version = "1.8.1" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
-timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 preference = { module = "androidx.preference:preference", version.ref = "preference" }
 preference-ktx = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
 androidsvg = { group = "com.caverock", name = "androidsvg", version.ref = "androidsvg" }
