@@ -1,7 +1,6 @@
 package com.fkdeepal.tools.ext.ui.setting
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.os.Bundle
@@ -322,24 +321,13 @@ class SettingActivity: AppCompatActivity() {
          */
         private fun refreshHudAdapterSpacing(newSpacing: Int) {
             try {
-                // 直接调用 AmapFloatManager 的更新间距方法
-                val method = Class.forName("com.fkdeepal.tools.ext.AmapFloatManager")
-                    .getMethod("updateIconSpacing", Context::class.java)
-                method.invoke(null, requireContext())
-                Timber.tag(TAG).d("成功调用AmapFloatManager更新间距方法，新间距: ${newSpacing}px")
+                // ========== 修改：直接调用 AmapFloatManager 的刷新方法 ==========
+                val amapFloatManagerClass = Class.forName("com.fkdeepal.tools.ext.AmapFloatManager")
+                val refreshMethod = amapFloatManagerClass.getMethod("refreshIconSpacing")
+                refreshMethod.invoke(null)
+                Timber.tag(TAG).d("成功调用AmapFloatManager刷新间距方法，新间距: ${newSpacing}px")
             } catch (e: Exception) {
-                Timber.tag(TAG).e(e, "调用AmapFloatManager更新间距方法失败")
-                // 备用方案：尝试调用适配器刷新
-                try {
-                    val adapter = SettingActivity.getHudAdapter()
-                    if (adapter != null) {
-                        val method = adapter.javaClass.getMethod("refreshIconSpacing")
-                        method.invoke(adapter)
-                        Timber.tag(TAG).d("使用备用方案刷新间距")
-                    }
-                } catch (e2: Exception) {
-                    Timber.tag(TAG).e(e2, "备用方案也失败")
-                }
+                Timber.tag(TAG).e(e, "调用AmapFloatManager刷新间距方法失败")
             }
         }
         
