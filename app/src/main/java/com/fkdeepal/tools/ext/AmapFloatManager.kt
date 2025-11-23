@@ -17,7 +17,6 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.text.scale
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.fkdeepal.tools.ext.adapter.HudAmapDriveWayAdapter
 import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.FloatHudDriveWayBinding
@@ -33,7 +32,6 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
-import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
@@ -57,6 +55,8 @@ object AmapFloatManager {
     
     private val mAmapDriveWayInfoData = arrayListOf<AmapDriveWayInfoBean>()
     private var mAmapDriveWayInfoAdapter: HudAmapDriveWayAdapter? = null
+    // ========== 新增：间距装饰器引用 ==========
+    private var mSpacingItemDecoration: HorizontalSpaceItemDecoration? = null
 
     private val mDistanceDecimalFormat = DecimalFormat("0.#")
     private val mNaviArriveTimeDateFormat = SimpleDateFormat("HH:mm")
@@ -111,6 +111,8 @@ object AmapFloatManager {
             mWindowManager?.removeView(it.root)
         }
         mHudFloatNaviInfoBinding = null
+        // ========== 新增：清理间距装饰器引用 ==========
+        mSpacingItemDecoration = null
     }
 
     fun registerEvent() {
@@ -251,9 +253,9 @@ object AmapFloatManager {
         mHudFloatNaviInfoBinding = FloatHudNaviInfoBinding.inflate(LayoutInflater.from(context))
         mWindowManager = ContextCompat.getSystemService(context, WindowManager::class.java)
         
-        // ========== 修改：增大HUD宽度以容纳更大图标 ==========
+        // ========== 修改：恢复原来的宽度 ==========
         val naviInfoLayoutParams = WindowManager.LayoutParams(
-            350,  // 增大宽度以容纳更大图标
+            275,  // 恢复原来的宽度
             134,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -274,8 +276,10 @@ object AmapFloatManager {
         val layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
         mHudFloatNaviInfoBinding?.rvDriverWay?.layoutManager = layoutManager
 
-        // ========== 修改：使用动态间距 ==========
-        updateIconSpacing(context)
+        // ========== 修改：使用动态间距并保存引用 ==========
+        val currentSpacing = PreferenceUtils.getLandIconSpacing(context)
+        mSpacingItemDecoration = HorizontalSpaceItemDecoration(currentSpacing)
+        mHudFloatNaviInfoBinding?.rvDriverWay?.addItemDecoration(mSpacingItemDecoration!!)
 
         val naviInfoView = mHudFloatNaviInfoBinding!!.root
 
@@ -287,27 +291,26 @@ object AmapFloatManager {
 
         mWindowManager?.addView(naviInfoView, naviInfoLayoutParams)
     }
-
-    /**
-     * 新增：更新图标间距（用于实时刷新）
-     */
-    fun updateIconSpacing(context: Context) {
-        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView: RecyclerView ->
-            // 移除所有现有的ItemDecoration
-            for (i in recyclerView.itemDecorationCount - 1 downTo 0) {
-                recyclerView.removeItemDecorationAt(i)
+    
+    // ========== 新增：实时刷新间距的方法 ==========
+    fun refreshIconSpacing() {
+        Timber.d("AmapFloatManager.refreshIconSpacing() - 刷新图标间距")
+        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView ->
+            // 移除旧的间距装饰器
+            mSpacingItemDecoration?.let { oldDecoration ->
+                recyclerView.removeItemDecoration(oldDecoration)
             }
             
-            // 获取当前间距设置并应用新的ItemDecoration
-            val currentSpacing = PreferenceUtils.getLandIconSpacing(context)
-            val itemDecoration = HorizontalSpaceItemDecoration(currentSpacing)
-            recyclerView.addItemDecoration(itemDecoration)
+            // 添加新的间距装饰器
+            val newSpacing = PreferenceUtils.getLandIconSpacing(AppUtils.appContext)
+            mSpacingItemDecoration = HorizontalSpaceItemDecoration(newSpacing)
+            recyclerView.addItemDecoration(mSpacingItemDecoration!!)
             
-            // 强制刷新RecyclerView
+            // 强制刷新布局
             recyclerView.invalidateItemDecorations()
             mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
             
-            Timber.d("图标间距已更新: ${currentSpacing}px")
+            Timber.d("AmapFloatManager.refreshIconSpacing() - 间距已更新为: ${newSpacing}px")
         }
     }
     
