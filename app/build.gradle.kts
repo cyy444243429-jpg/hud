@@ -57,6 +57,7 @@ dependencies {
     
     // 其他依赖使用版本目录
     implementation(libs.androidsvg)
+    implementation("com.jakewharton.timber:timber:5.0.1")
     implementation(libs.timber)
     implementation(libs.gson)
     implementation(libs.preference)
