@@ -32,7 +32,6 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
-import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
@@ -128,107 +127,114 @@ object AmapFloatManager {
                 }
                 mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
             }
-            
-        LiveEventBus.get(AmapNaviGuideInfoEvent.KEY, AmapNaviGuideInfoEvent::class.java)
-            .observeForever { event ->
-                mHudFloatNaviInfoBinding?.apply {
-                    val info = event.info
-                    
-                    // ========== 新增：高亮显示检测逻辑 ==========
-                    val shouldHighlight = shouldHighlightNavigation(info)
-                    setHighlightState(shouldHighlight)
-                    
-                    // 原有的图标显示逻辑保持不变
-                    tvIconType.visibility = View.GONE
-                    val newIcon = info.newIcon
-                    when (newIcon) {
-                        65 -> ivIcon.setImageResource(R.drawable.ic_hud_sou_4)
-                        66 -> ivIcon.setImageResource(R.drawable.ic_hud_sou_5)
-                        11, 12 -> {
-                            when (info.roundAboutNum) {
-                                1 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_1)
-                                2 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_2)
-                                3 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_3)
-                                4 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_4)
-                                5 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_5)
-                                6 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_6)
-                                7 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_7)
-                                8 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_8)
-                                9 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_9)
-                                10 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_10)
-                                else -> {
-                                    if (newIcon == 11) {
-                                        ivIcon.setImageResource(R.drawable.ic_hud_sou_11)
-                                    } else {
-                                        ivIcon.setImageResource(R.drawable.ic_hud_sou_12)
-                                    }
+    
+    // ========== 新增：监听间距更新事件 ==========
+    LiveEventBus.get("land_icon_spacing_update", Int::class.java)
+        .observeForever { newSpacing ->
+            Timber.d("AmapFloatManager - 收到图标间距更新事件: ${newSpacing}px")
+            refreshIconSpacing()
+        }
+        
+    LiveEventBus.get(AmapNaviGuideInfoEvent.KEY, AmapNaviGuideInfoEvent::class.java)
+        .observeForever { event ->
+            mHudFloatNaviInfoBinding?.apply {
+                val info = event.info
+                
+                // ========== 新增：高亮显示检测逻辑 ==========
+                val shouldHighlight = shouldHighlightNavigation(info)
+                setHighlightState(shouldHighlight)
+                
+                // 原有的图标显示逻辑保持不变
+                tvIconType.visibility = View.GONE
+                val newIcon = info.newIcon
+                when (newIcon) {
+                    65 -> ivIcon.setImageResource(R.drawable.ic_hud_sou_4)
+                    66 -> ivIcon.setImageResource(R.drawable.ic_hud_sou_5)
+                    11, 12 -> {
+                        when (info.roundAboutNum) {
+                            1 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_1)
+                            2 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_2)
+                            3 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_3)
+                            4 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_4)
+                            5 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_5)
+                            6 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_6)
+                            7 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_7)
+                            8 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_8)
+                            9 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_9)
+                            10 -> ivIcon.setImageResource(R.drawable.ic_hud_rotary_right_10)
+                            else -> {
+                                if (newIcon == 11) {
+                                    ivIcon.setImageResource(R.drawable.ic_hud_sou_11)
+                                } else {
+                                    ivIcon.setImageResource(R.drawable.ic_hud_sou_12)
                                 }
                             }
                         }
-                        else -> {
-                            val iconIndex = newIcon - 1
-                            val iconResId = mNaviIconArray.getOrNull(iconIndex)
-                            if (iconResId != null) {
-                                ivIcon.setImageResource(iconResId)
-                            } else {
-                                ivIcon.setImageResource(R.color.transparent)
-                                tvIconType.visibility = View.VISIBLE
-                                tvIconType.setText(info.newIcon.toString())
-                            }
-                        }
                     }
-
-                    val segRemainDis = info.segRemainDis
-                    tvSegRemain.setText(buildSpannedString {
-                        bold {
-                            if (segRemainDis < 10) {
-                                append("现在")
-                            } else if (segRemainDis > 1000) {
-                                append(mDistanceDecimalFormat.format(segRemainDis / 1000.0))
-                            } else {
-                                append((segRemainDis).toString())
-                            }
-                        }
-                        scale(0.7f) {
-                            if (segRemainDis < 10) {
-                                // 什么都不添加
-                            } else if (segRemainDis > 1000) {
-                                append("公里")
-                            } else {
-                                append("米")
-                            }
-                            color(mNextRoadEnterTextColor) {
-                                append(" 进入")
-                            }
-                        }
-                    })
-                    tvRoadName.setText(info.nextRoadName)
-                    val routeRemainDis = info.routeRemainDis
-                    val routeRemainTime = info.routeRemainTime
-                    if (routeRemainDis > -1 && routeRemainTime > -1) {
-                        if (routeRemainDis == 0 || routeRemainTime == 0) {
-                            tvRemainInfo.setText("到达")
+                    else -> {
+                        val iconIndex = newIcon - 1
+                        val iconResId = mNaviIconArray.getOrNull(iconIndex)
+                        if (iconResId != null) {
+                            ivIcon.setImageResource(iconResId)
                         } else {
-                            tvRemainInfo.setText("${info.routeRemainDisStr} · ${info.routeRemainTimeStr}")
+                            ivIcon.setImageResource(R.color.transparent)
+                            tvIconType.visibility = View.VISIBLE
+                            tvIconType.setText(info.newIcon.toString())
                         }
-                    } else {
-                        tvRemainInfo.setText("")
-                    }
-                    val cameraSpeed = info.cameraSpeed
-                    if (cameraSpeed > 0) {
-                        tvCameraSpeed.setText(cameraSpeed.toString())
-                        tvCameraSpeed.visibility = View.VISIBLE
-                    } else {
-                        tvCameraSpeed.visibility = View.GONE
-                    }
-                    if (routeRemainTime > 0) {
-                        val endTime = System.currentTimeMillis() + routeRemainTime * 1000
-                        tvArriveTime.setText("${mNaviArriveTimeDateFormat.format(endTime)}到")
-                    } else {
-                        tvArriveTime.setText("")
                     }
                 }
+
+                val segRemainDis = info.segRemainDis
+                tvSegRemain.setText(buildSpannedString {
+                    bold {
+                        if (segRemainDis < 10) {
+                            append("现在")
+                        } else if (segRemainDis > 1000) {
+                            append(mDistanceDecimalFormat.format(segRemainDis / 1000.0))
+                        } else {
+                            append((segRemainDis).toString())
+                        }
+                    }
+                    scale(0.7f) {
+                        if (segRemainDis < 10) {
+                            // 什么都不添加
+                        } else if (segRemainDis > 1000) {
+                            append("公里")
+                        } else {
+                            append("米")
+                        }
+                        color(mNextRoadEnterTextColor) {
+                            append(" 进入")
+                        }
+                    }
+                })
+                tvRoadName.setText(info.nextRoadName)
+                val routeRemainDis = info.routeRemainDis
+                val routeRemainTime = info.routeRemainTime
+                if (routeRemainDis > -1 && routeRemainTime > -1) {
+                    if (routeRemainDis == 0 || routeRemainTime == 0) {
+                        tvRemainInfo.setText("到达")
+                    } else {
+                        tvRemainInfo.setText("${info.routeRemainDisStr} · ${info.routeRemainTimeStr}")
+                    }
+                } else {
+                    tvRemainInfo.setText("")
+                }
+                val cameraSpeed = info.cameraSpeed
+                if (cameraSpeed > 0) {
+                    tvCameraSpeed.setText(cameraSpeed.toString())
+                    tvCameraSpeed.visibility = View.VISIBLE
+                } else {
+                    tvCameraSpeed.visibility = View.GONE
+                }
+                if (routeRemainTime > 0) {
+                    val endTime = System.currentTimeMillis() + routeRemainTime * 1000
+                    tvArriveTime.setText("${mNaviArriveTimeDateFormat.format(endTime)}到")
+                } else {
+                    tvArriveTime.setText("")
+                }
             }
+        }
             
         LiveEventBus.get(AmapNaviGuideEndEvent.KEY, AmapNaviGuideEndEvent::class.java)
             .observeForever { event ->
@@ -309,7 +315,6 @@ object AmapFloatManager {
             
             // 强制刷新布局
             recyclerView.invalidateItemDecorations()
-            mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
             
             Timber.d("AmapFloatManager.refreshIconSpacing() - 间距已更新为: ${newSpacing}px")
         }
