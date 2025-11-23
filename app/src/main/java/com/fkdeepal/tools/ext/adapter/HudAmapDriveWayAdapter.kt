@@ -56,6 +56,14 @@ class HudAmapDriveWayAdapter(mData: ArrayList<AmapDriveWayInfoBean>) : BaseAdapt
                 // 强制刷新所有可见的图标
                 notifyDataSetChanged()
             }
+        
+        // ========== 新增：监听间距更新事件 ==========
+        LiveEventBus.get("land_icon_spacing_update", Int::class.java)
+            .observeForever { newSpacing ->
+                Timber.tag(TAG).d("收到图标间距更新事件: ${newSpacing}px，刷新所有可见图标")
+                // 强制刷新所有可见的图标
+                notifyDataSetChanged()
+            }
     }
 
     fun setImageDrawable(viewBinding: ItemHubDriveWayBinding, resourceName: String,
