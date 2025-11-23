@@ -54,9 +54,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
-    implementation 'com.jakewharton.timber:timber:5.0.1'
-
-
+    
     // 其他依赖使用版本目录
     implementation(libs.androidsvg)
     implementation(libs.timber)
