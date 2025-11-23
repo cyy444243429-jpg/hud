@@ -17,6 +17,7 @@ import androidx.core.text.buildSpannedString
 import androidx.core.text.color
 import androidx.core.text.scale
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.fkdeepal.tools.ext.adapter.HudAmapDriveWayAdapter
 import com.fkdeepal.tools.ext.bean.AmapDriveWayInfoBean
 import com.fkdeepal.tools.ext.databinding.FloatHudDriveWayBinding
@@ -32,6 +33,7 @@ import com.fkdeepal.tools.ext.utils.AppUtils
 import com.fkdeepal.tools.ext.utils.ColorPreferenceManager
 import com.fkdeepal.tools.ext.utils.PreferenceUtils
 import com.jeremyliao.liveeventbus.LiveEventBus
+import timber.log.Timber
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 
@@ -290,7 +292,7 @@ object AmapFloatManager {
      * 新增：更新图标间距（用于实时刷新）
      */
     fun updateIconSpacing(context: Context) {
-        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView ->
+        mHudFloatNaviInfoBinding?.rvDriverWay?.let { recyclerView: RecyclerView ->
             // 移除所有现有的ItemDecoration
             for (i in recyclerView.itemDecorationCount - 1 downTo 0) {
                 recyclerView.removeItemDecorationAt(i)
@@ -305,7 +307,7 @@ object AmapFloatManager {
             recyclerView.invalidateItemDecorations()
             mAmapDriveWayInfoAdapter?.notifyDataSetChanged()
             
-            Timber.d("AmapFloatManager", "图标间距已更新: ${currentSpacing}px")
+            Timber.d("图标间距已更新: ${currentSpacing}px")
         }
     }
     
